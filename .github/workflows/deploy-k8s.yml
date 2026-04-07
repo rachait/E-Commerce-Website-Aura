@@ -24,7 +24,9 @@ jobs:
     - name: Compute image naming variables
       id: vars
       run: |
-        echo "owner_lc=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+        $ownerLc = $env:GITHUB_REPOSITORY_OWNER.ToLower()
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "owner_lc=$ownerLc"
+      shell: pwsh
 
     - name: Log in to GHCR
       uses: docker/login-action@v3
