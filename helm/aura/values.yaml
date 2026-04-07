@@ -80,3 +80,6 @@ grafana:
   # The label that Grafana's sidecar uses to discover ConfigMaps
   dashboardLabel:
     grafana_dashboard: "1"
+  # UID of the Prometheus datasource configured in Grafana
+  # Override this with the actual datasource UID from your Grafana installation
+  prometheusDatasourceUid: "prometheus"

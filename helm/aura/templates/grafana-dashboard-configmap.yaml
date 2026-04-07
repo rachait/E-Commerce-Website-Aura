@@ -1,4 +1,5 @@
 {{- if .Values.grafana.dashboardEnabled }}
+{{- $dsUid := .Values.grafana.prometheusDatasourceUid }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -23,7 +24,7 @@ data:
       "links": [],
       "panels": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "palette-classic" },
@@ -36,7 +37,7 @@ data:
           "options": { "legend": { "displayMode": "list" }, "tooltip": { "mode": "single" } },
           "targets": [
             {
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
               "expr": "rate(http_requests_total{job=\"aura-backend\"}[1m])",
               "legendFormat": "{{`{{method}}`}} {{`{{status_code}}`}}",
               "refId": "A"
@@ -46,7 +47,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "palette-classic" },
@@ -60,7 +61,7 @@ data:
           "options": { "legend": { "displayMode": "list" }, "tooltip": { "mode": "single" } },
           "targets": [
             {
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
               "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"aura-backend\"}[5m])) by (le))",
               "legendFormat": "p95 latency",
               "refId": "A"
@@ -70,7 +71,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -90,7 +91,7 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
           "targets": [
             {
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
               "expr": "sum(rate(http_requests_total{job=\"aura-backend\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"aura-backend\"}[5m]))",
               "legendFormat": "Error rate",
               "refId": "A"
@@ -100,7 +101,7 @@ data:
           "type": "stat"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -119,7 +120,7 @@ data:
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
           "targets": [
             {
-              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "datasource": { "type": "prometheus", "uid": {{ $dsUid | quote }} },
               "expr": "up{job=\"aura-backend\"}",
               "legendFormat": "Backend up",
               "refId": "A"

@@ -11,6 +11,8 @@ jobs:
   backend-ci:
     name: Backend – Lint & Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: backend
@@ -48,6 +50,8 @@ jobs:
   frontend-ci:
     name: Frontend – Lint, Test & Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: frontend
@@ -86,7 +90,8 @@ jobs:
   helm-lint:
     name: Helm – Lint & Template Check
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
