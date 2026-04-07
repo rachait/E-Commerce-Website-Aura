@@ -120,17 +120,20 @@ jobs:
           --dry-run=client -o yaml | kubectl apply -f -
 
     - name: Apply GHCR pull secret (optional)
-      if: ${{ secrets.GHCR_PULL_SECRET_NAME != '' && secrets.GHCR_USERNAME != '' && secrets.GHCR_TOKEN != '' }}
       env:
         GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
         GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
         GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
       run: |
-        kubectl -n ${{ env.NAMESPACE }} create secret docker-registry "$GHCR_PULL_SECRET_NAME" \
-          --docker-server=${{ env.REGISTRY }} \
-          --docker-username="$GHCR_USERNAME" \
-          --docker-password="$GHCR_TOKEN" \
-          --dry-run=client -o yaml | kubectl apply -f -
+        if [ -n "$GHCR_PULL_SECRET_NAME" ] && [ -n "$GHCR_USERNAME" ] && [ -n "$GHCR_TOKEN" ]; then
+          kubectl -n ${{ env.NAMESPACE }} create secret docker-registry "$GHCR_PULL_SECRET_NAME" \
+            --docker-server=${{ env.REGISTRY }} \
+            --docker-username="$GHCR_USERNAME" \
+            --docker-password="$GHCR_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+        else
+          echo "Skipping optional GHCR pull secret creation (one or more values missing)."
+        fi
 
     - name: Deploy with Helm
       env:
