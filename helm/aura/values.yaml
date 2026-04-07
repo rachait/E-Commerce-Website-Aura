@@ -1,0 +1,82 @@
+# Default values for the Aura Helm chart.
+# Override these in CI/CD with --set or a values override file.
+
+nameOverride: ""
+fullnameOverride: ""
+
+namespace: aura
+
+# ── Backend ──────────────────────────────────────────────────────────────────
+backend:
+  image:
+    repository: ghcr.io/rachait/aura-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  port: 8000
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  livenessProbe:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 15
+  readinessProbe:
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+# ── Frontend ─────────────────────────────────────────────────────────────────
+frontend:
+  image:
+    repository: ghcr.io/rachait/aura-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  port: 80
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+  livenessProbe:
+    path: /healthz
+    initialDelaySeconds: 5
+    periodSeconds: 15
+  readinessProbe:
+    path: /healthz
+    initialDelaySeconds: 3
+    periodSeconds: 10
+
+# ── Ingress ───────────────────────────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: nginx
+  host: aura.example.com
+  tls: []
+  # tls:
+  #   - secretName: aura-tls
+  #     hosts:
+  #       - aura.example.com
+
+# ── Prometheus monitoring ─────────────────────────────────────────────────────
+serviceMonitor:
+  enabled: true
+  # Label selector for the Prometheus Operator to pick up this ServiceMonitor
+  labels:
+    release: prometheus
+  interval: 30s
+  scrapeTimeout: 10s
+
+# ── Grafana dashboard ConfigMap ───────────────────────────────────────────────
+grafana:
+  dashboardEnabled: true
+  # The label that Grafana's sidecar uses to discover ConfigMaps
+  dashboardLabel:
+    grafana_dashboard: "1"

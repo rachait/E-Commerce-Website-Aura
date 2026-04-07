@@ -1,0 +1,143 @@
+{{- if .Values.grafana.dashboardEnabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aura.fullname" . }}-grafana-dashboard
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "aura.labels" . | nindent 4 }}
+    {{- with .Values.grafana.dashboardLabel }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  aura-dashboard.json: |-
+    {
+      "__inputs": [],
+      "__requires": [],
+      "annotations": { "list": [] },
+      "description": "Aura E-Commerce Platform – FastAPI backend metrics",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 1 }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "id": 1,
+          "options": { "legend": { "displayMode": "list" }, "tooltip": { "mode": "single" } },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "rate(http_requests_total{job=\"aura-backend\"}[1m])",
+              "legendFormat": "{{`{{method}}`}} {{`{{status_code}}`}}",
+              "refId": "A"
+            }
+          ],
+          "title": "HTTP Request Rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": { "lineWidth": 1 },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "id": 2,
+          "options": { "legend": { "displayMode": "list" }, "tooltip": { "mode": "single" } },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"aura-backend\"}[5m])) by (le))",
+              "legendFormat": "p95 latency",
+              "refId": "A"
+            }
+          ],
+          "title": "HTTP p95 Latency",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 0.01 }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+          "id": 3,
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(rate(http_requests_total{job=\"aura-backend\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"aura-backend\"}[5m]))",
+              "legendFormat": "Error rate",
+              "refId": "A"
+            }
+          ],
+          "title": "5xx Error Rate",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+          "id": 4,
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "up{job=\"aura-backend\"}",
+              "legendFormat": "Backend up",
+              "refId": "A"
+            }
+          ],
+          "title": "Backend Up",
+          "type": "stat"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "tags": ["aura", "fastapi", "ecommerce"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Aura E-Commerce Platform",
+      "uid": "aura-ecommerce",
+      "version": 1
+    }
+{{- end }}

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: aura
+description: Helm chart for the Aura E-Commerce Platform (FastAPI backend + React frontend)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - ecommerce
+  - fastapi
+  - react
+  - kubernetes
+maintainers:
+  - name: Aura Team
