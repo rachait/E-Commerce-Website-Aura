@@ -16,7 +16,7 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, windows, kubernetes, docker]
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -77,8 +77,13 @@ jobs:
 
     - name: Configure kubeconfig
       run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
+        $kubeDir = "$env:USERPROFILE\.kube"
+        if (-not (Test-Path $kubeDir)) { New-Item -ItemType Directory -Path $kubeDir -Force | Out-Null }
+        $configData = "${{ secrets.KUBE_CONFIG_DATA }}"
+        $decodedBytes = [System.Convert]::FromBase64String($configData)
+        [System.IO.File]::WriteAllBytes("$kubeDir\config", $decodedBytes)
+        Write-Host "Kubeconfig configured at $kubeDir\config"
+      shell: pwsh
 
     - name: Create namespace
       run: kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
@@ -125,36 +130,42 @@ jobs:
         GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
         GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
       run: |
-        if [ -n "$GHCR_PULL_SECRET_NAME" ] && [ -n "$GHCR_USERNAME" ] && [ -n "$GHCR_TOKEN" ]; then
-          kubectl -n ${{ env.NAMESPACE }} create secret docker-registry "$GHCR_PULL_SECRET_NAME" \
-            --docker-server=${{ env.REGISTRY }} \
-            --docker-username="$GHCR_USERNAME" \
-            --docker-password="$GHCR_TOKEN" \
+        if ($env:GHCR_PULL_SECRET_NAME -and $env:GHCR_USERNAME -and $env:GHCR_TOKEN) {
+          kubectl -n ${{ env.NAMESPACE }} create secret docker-registry $env:GHCR_PULL_SECRET_NAME `
+            --docker-server=${{ env.REGISTRY }} `
+            --docker-username="$env:GHCR_USERNAME" `
+            --docker-password="$env:GHCR_TOKEN" `
             --dry-run=client -o yaml | kubectl apply -f -
-        else
-          echo "Skipping optional GHCR pull secret creation (one or more values missing)."
-        fi
+          Write-Host "GHCR pull secret created successfully"
+        } else {
+          Write-Host "Skipping optional GHCR pull secret creation (one or more values missing)."
+        }
+      shell: pwsh
 
     - name: Deploy with Helm
       env:
         GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
       run: |
-        HELM_IMAGE_PULL_SECRET_ARGS=""
-        if [ -n "$GHCR_PULL_SECRET_NAME" ]; then
-          HELM_IMAGE_PULL_SECRET_ARGS="--set global.imagePullSecrets[0].name=$GHCR_PULL_SECRET_NAME"
-        fi
+        $helmImagePullSecretArgs = ""
+        if ($env:GHCR_PULL_SECRET_NAME) {
+          $helmImagePullSecretArgs = "--set global.imagePullSecrets[0].name=$($env:GHCR_PULL_SECRET_NAME)"
+        }
 
-        helm upgrade --install aura ./helm/aura \
-          --namespace ${{ env.NAMESPACE }} \
-          --create-namespace \
-          --set global.namespace=${{ env.NAMESPACE }} \
-          --set ingress.host=${{ secrets.APP_HOST }} \
-          --set backend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-backend \
-          --set backend.image.tag=sha-${{ github.sha }} \
-          --set frontend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-frontend \
-          --set frontend.image.tag=sha-${{ github.sha }} \
-          --set monitoring.serviceMonitor.enabled=false \
-          $HELM_IMAGE_PULL_SECRET_ARGS
+        $cmd = @(
+          "helm", "upgrade", "--install", "aura", "./helm/aura",
+          "--namespace", "${{ env.NAMESPACE }}",
+          "--create-namespace",
+          "--set", "global.namespace=${{ env.NAMESPACE }}",
+          "--set", "ingress.host=${{ secrets.APP_HOST }}",
+          "--set", "backend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-backend",
+          "--set", "backend.image.tag=sha-${{ github.sha }}",
+          "--set", "frontend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-frontend",
+          "--set", "frontend.image.tag=sha-${{ github.sha }}",
+          "--set", "monitoring.serviceMonitor.enabled=false"
+        )
+        if ($helmImagePullSecretArgs) { $cmd += $helmImagePullSecretArgs.Split() }
+        & helm @cmd
+      shell: pwsh
 
     - name: Verify rollout
       run: |
