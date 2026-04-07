@@ -1,0 +1,63 @@
+{{- if .Values.monitoring.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "aura.fullname" . }}-alerts
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: aura.backend.rules
+    rules:
+    - alert: AuraBackendDown
+      expr: sum(up{job="aura-aura-backend"}) < 1
+      for: {{ .Values.monitoring.prometheusRule.backendDownFor }}
+      labels:
+        severity: critical
+        team: aura
+      annotations:
+        summary: Aura backend is down
+        description: No healthy Aura backend targets are up in Prometheus.
+
+    - alert: AuraHigh5xxRate
+      expr: |
+        (
+          sum(rate(http_requests_total{job="aura-aura-backend",status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(http_requests_total{job="aura-aura-backend"}[5m])), 1)
+        ) > {{ .Values.monitoring.prometheusRule.high5xxRateThreshold }}
+      for: {{ .Values.monitoring.prometheusRule.high5xxRateFor }}
+      labels:
+        severity: warning
+        team: aura
+      annotations:
+        summary: High 5xx error ratio on Aura backend
+        description: 5xx ratio is above threshold for the last period.
+
+    - alert: AuraHighLatencyP95
+      expr: |
+        histogram_quantile(
+          0.95,
+          sum(rate(http_request_duration_seconds_bucket{job="aura-aura-backend"}[5m])) by (le)
+        ) > {{ .Values.monitoring.prometheusRule.highLatencyP95Seconds }}
+      for: {{ .Values.monitoring.prometheusRule.highLatencyP95For }}
+      labels:
+        severity: warning
+        team: aura
+      annotations:
+        summary: High p95 latency on Aura backend
+        description: p95 latency is above configured threshold.
+
+    - alert: AuraBackendRestarting
+      expr: |
+        sum(increase(kube_pod_container_status_restarts_total{namespace="aura",pod=~"aura-aura-backend-.*"}[10m]))
+        > {{ .Values.monitoring.prometheusRule.backendRestartThreshold }}
+      for: {{ .Values.monitoring.prometheusRule.backendRestartFor }}
+      labels:
+        severity: warning
+        team: aura
+      annotations:
+        summary: Aura backend restarting frequently
+        description: Backend pods have restarted more than the allowed threshold.
+{{- end }}

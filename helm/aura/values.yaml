@@ -1,0 +1,95 @@
+global:
+  namespace: aura
+  imagePullSecrets: []
+
+frontend:
+  replicaCount: 2
+  image:
+    repository: aura-frontend
+    tag: local
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+backend:
+  replicaCount: 2
+  image:
+    repository: aura-backend
+    tag: local
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  env:
+    existingSecret: aura-backend-secrets
+    createSecret: true
+    values:
+      DB_NAME: aura_ecommerce
+      CORS_ORIGINS: '["http://aura.127.0.0.1.nip.io"]'
+      JWT_SECRET: change-me
+      EMERGENT_LLM_KEY: ""
+      RAZORPAY_KEY_ID: ""
+      RAZORPAY_KEY_SECRET: ""
+      CLOUDINARY_CLOUD_NAME: ""
+      CLOUDINARY_API_KEY: ""
+      CLOUDINARY_API_SECRET: ""
+      OPENAI_API_KEY: ""
+      SENDER_EMAIL: ""
+      SENDER_PASSWORD: ""
+      SMTP_SERVER: smtp.gmail.com
+      SMTP_PORT: "465"
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  host: aura.127.0.0.1.nip.io
+  tls:
+    enabled: false
+    secretName: aura-tls
+
+mongodb:
+  enabled: true
+  image:
+    repository: mongo
+    tag: "7.0"
+    pullPolicy: IfNotPresent
+  service:
+    port: 27017
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClassName: ""
+
+seed:
+  enabled: true
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+  prometheusRule:
+    enabled: true
+    backendDownFor: 2m
+    high5xxRateThreshold: 0.05
+    high5xxRateFor: 10m
+    highLatencyP95Seconds: 1.0
+    highLatencyP95For: 10m
+    backendRestartThreshold: 3
+    backendRestartFor: 10m

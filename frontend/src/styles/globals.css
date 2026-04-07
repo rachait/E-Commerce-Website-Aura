@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  color: #111827;
+  font-family: 'Manrope', sans-serif;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0C0C0F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00F0FF;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00D4E8;
+}
+
+/* Glassmorphism base style */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(32px);
+  border: 1px solid rgba(0, 240, 255, 0.1);
+  border-radius: 12px;
+}
+
+.glass-button {
+  @apply glass-panel px-6 py-3 font-body font-medium text-text-primary hover:border-cyan-neon transition-all duration-300;
+}
+
+.neon-glow {
+  filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.5));
+}
+
+.neon-text {
+  color: #00F0FF;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+}
+
+/* Loading animation */
+@keyframes pulse-neon {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}

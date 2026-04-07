@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aura.fullname" . }}-mongodb
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/name: aura-mongodb
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: aura-mongodb
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+  - name: mongo
+    port: {{ .Values.mongodb.service.port }}
+    targetPort: 27017

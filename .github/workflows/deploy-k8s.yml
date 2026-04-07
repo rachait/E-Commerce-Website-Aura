@@ -1,0 +1,159 @@
+name: Deploy To Kubernetes
+
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  NAMESPACE: aura
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Compute image naming variables
+      id: vars
+      run: |
+        echo "owner_lc=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract image metadata (backend)
+      id: meta_backend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-backend
+        tags: |
+          type=raw,value=sha-${{ github.sha }}
+          type=raw,value=latest
+
+    - name: Extract image metadata (frontend)
+      id: meta_frontend
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-frontend
+        tags: |
+          type=raw,value=sha-${{ github.sha }}
+          type=raw,value=latest
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v6
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: true
+        tags: ${{ steps.meta_backend.outputs.tags }}
+        labels: ${{ steps.meta_backend.outputs.labels }}
+
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v6
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: true
+        tags: ${{ steps.meta_frontend.outputs.tags }}
+        labels: ${{ steps.meta_frontend.outputs.labels }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4
+
+    - name: Configure kubeconfig
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
+
+    - name: Create namespace
+      run: kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Apply backend secret
+      env:
+        MONGO_URL: ${{ secrets.MONGO_URL }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        EMERGENT_LLM_KEY: ${{ secrets.EMERGENT_LLM_KEY }}
+        RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
+        RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET }}
+        CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+        CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+        CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      run: |
+        kubectl -n ${{ env.NAMESPACE }} create secret generic aura-backend-secrets \
+          --from-literal=MONGO_URL="$MONGO_URL" \
+          --from-literal=DB_NAME="$DB_NAME" \
+          --from-literal=CORS_ORIGINS="$CORS_ORIGINS" \
+          --from-literal=JWT_SECRET="$JWT_SECRET" \
+          --from-literal=EMERGENT_LLM_KEY="$EMERGENT_LLM_KEY" \
+          --from-literal=RAZORPAY_KEY_ID="$RAZORPAY_KEY_ID" \
+          --from-literal=RAZORPAY_KEY_SECRET="$RAZORPAY_KEY_SECRET" \
+          --from-literal=CLOUDINARY_CLOUD_NAME="$CLOUDINARY_CLOUD_NAME" \
+          --from-literal=CLOUDINARY_API_KEY="$CLOUDINARY_API_KEY" \
+          --from-literal=CLOUDINARY_API_SECRET="$CLOUDINARY_API_SECRET" \
+          --from-literal=OPENAI_API_KEY="$OPENAI_API_KEY" \
+          --from-literal=SENDER_EMAIL="$SENDER_EMAIL" \
+          --from-literal=SENDER_PASSWORD="$SENDER_PASSWORD" \
+          --from-literal=SMTP_SERVER="$SMTP_SERVER" \
+          --from-literal=SMTP_PORT="$SMTP_PORT" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Apply GHCR pull secret (optional)
+      if: ${{ secrets.GHCR_PULL_SECRET_NAME != '' && secrets.GHCR_USERNAME != '' && secrets.GHCR_TOKEN != '' }}
+      env:
+        GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
+        GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+        GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      run: |
+        kubectl -n ${{ env.NAMESPACE }} create secret docker-registry "$GHCR_PULL_SECRET_NAME" \
+          --docker-server=${{ env.REGISTRY }} \
+          --docker-username="$GHCR_USERNAME" \
+          --docker-password="$GHCR_TOKEN" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Deploy with Helm
+      env:
+        GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
+      run: |
+        HELM_IMAGE_PULL_SECRET_ARGS=""
+        if [ -n "$GHCR_PULL_SECRET_NAME" ]; then
+          HELM_IMAGE_PULL_SECRET_ARGS="--set global.imagePullSecrets[0].name=$GHCR_PULL_SECRET_NAME"
+        fi
+
+        helm upgrade --install aura ./helm/aura \
+          --namespace ${{ env.NAMESPACE }} \
+          --create-namespace \
+          --set global.namespace=${{ env.NAMESPACE }} \
+          --set ingress.host=${{ secrets.APP_HOST }} \
+          --set backend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-backend \
+          --set backend.image.tag=sha-${{ github.sha }} \
+          --set frontend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-frontend \
+          --set frontend.image.tag=sha-${{ github.sha }} \
+          --set monitoring.serviceMonitor.enabled=false \
+          $HELM_IMAGE_PULL_SECRET_ARGS
+
+    - name: Verify rollout
+      run: |
+        kubectl -n ${{ env.NAMESPACE }} rollout status deploy/aura-aura-backend --timeout=180s
+        kubectl -n ${{ env.NAMESPACE }} rollout status deploy/aura-aura-frontend --timeout=180s

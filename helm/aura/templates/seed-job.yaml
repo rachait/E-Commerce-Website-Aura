@@ -1,0 +1,61 @@
+{{- if .Values.seed.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "aura.fullname" . }}-seed
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/name: aura-seed
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aura-seed
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: seed
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        env:
+        - name: MONGO_URL
+          value: "mongodb://{{ include "aura.fullname" . }}-mongodb:{{ .Values.mongodb.service.port }}"
+        envFrom:
+        - secretRef:
+            name: {{ .Values.backend.env.existingSecret }}
+        command:
+        - sh
+        - -c
+        - |
+          python - <<'PY'
+          import asyncio
+          import sys
+          from motor.motor_asyncio import AsyncIOMotorClient
+          from config import settings
+
+          async def wait_for_mongo() -> bool:
+              client = AsyncIOMotorClient(settings.MONGO_URL)
+              for _ in range(60):
+                  try:
+                      await client.admin.command("ping")
+                      client.close()
+                      return True
+                  except Exception:
+                      await asyncio.sleep(2)
+              client.close()
+              return False
+
+          async def main() -> None:
+              if not await wait_for_mongo():
+                  sys.exit(1)
+
+          asyncio.run(main())
+          PY
+          python seed_db.py
+{{- end }}

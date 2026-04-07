@@ -1,0 +1,11 @@
+{
+  "name": "aura-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -k -n backend,frontend -c blue,green \"cd backend && python -m uvicorn main:app --reload\" \"npm --prefix frontend run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

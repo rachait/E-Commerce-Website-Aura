@@ -1,0 +1,41 @@
+name: Install Monitoring Stack
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install-monitoring:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4
+
+    - name: Configure kubeconfig
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
+
+    - name: Add Helm repos
+      run: |
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo update
+
+    - name: Install/upgrade kube-prometheus-stack
+      run: |
+        helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+          --namespace monitoring \
+          --create-namespace
+
+    - name: Enable ServiceMonitor in app chart
+      run: |
+        helm upgrade --install aura ./helm/aura \
+          --namespace aura \
+          --create-namespace \
+          --reuse-values \
+          --set monitoring.serviceMonitor.enabled=true

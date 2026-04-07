@@ -1,0 +1,22 @@
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "aura.fullname" . }}-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.global.namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aura-backend
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: {{ .Values.monitoring.serviceMonitor.interval }}
+    scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+{{- end }}
