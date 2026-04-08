@@ -4,6 +4,12 @@ global:
 
 frontend:
   replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
   image:
     repository: aura-frontend
     tag: local
@@ -21,6 +27,12 @@ frontend:
 
 backend:
   replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
   image:
     repository: aura-backend
     tag: local
@@ -65,6 +77,7 @@ ingress:
 
 mongodb:
   enabled: true
+  replicaCount: 1
   image:
     repository: mongo
     tag: "7.0"

@@ -136,7 +136,7 @@ jobs:
       env:
         GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
       run: |
-        helm upgrade --install aura ./helm/aura `
+        helm upgrade --install aura ./deploy/helm/aura `
           --namespace ${{ env.NAMESPACE }} `
           --create-namespace `
           --set global.namespace=${{ env.NAMESPACE }} `
@@ -258,7 +258,7 @@ jobs:
 
     - name: Deploy with Helm
       run: |
-        helm upgrade --install aura ./helm/aura \
+        helm upgrade --install aura ./deploy/helm/aura \
           --namespace ${{ env.NAMESPACE }} \
           --create-namespace \
           --set global.namespace=${{ env.NAMESPACE }} \

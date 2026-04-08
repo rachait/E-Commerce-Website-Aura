@@ -7,7 +7,9 @@ metadata:
     app.kubernetes.io/name: aura-backend
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  {{- if not .Values.backend.autoscaling.enabled }}
   replicas: {{ .Values.backend.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: aura-backend

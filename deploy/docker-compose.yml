@@ -1,0 +1,68 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: aura-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../backend
+    container_name: aura-backend
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: aura_ecommerce
+      CORS_ORIGINS: '["*"]'
+      JWT_SECRET: your-secret-key-here-min-32-chars-long-change-this-in-production
+    command: sh -c "python seed_db.py && uvicorn main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ../frontend
+    container_name: aura-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: aura-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: aura-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  mongo_data:
+  prometheus_data:
+  grafana_data:

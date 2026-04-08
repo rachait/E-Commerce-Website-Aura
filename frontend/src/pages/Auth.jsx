@@ -66,6 +66,11 @@ export default function Auth() {
         return
       }
 
+      if (!isLogin && !formData.name.trim()) {
+        setError('Please enter your name')
+        return
+      }
+
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
@@ -239,6 +244,25 @@ export default function Auth() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
+                  {!isLogin && (
+                    <div>
+                      <label className="block text-sm font-body text-text-secondary mb-2">
+                        Name
+                      </label>
+                      <div className="relative">
+                        <User size={18} className="absolute left-3 top-3 text-text-secondary" />
+                        <input
+                          type="text"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          placeholder="Your full name"
+                          className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-body text-text-secondary mb-2">
                       Email Address

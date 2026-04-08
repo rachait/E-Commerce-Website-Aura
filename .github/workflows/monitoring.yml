@@ -34,7 +34,7 @@ jobs:
 
     - name: Enable ServiceMonitor in app chart
       run: |
-        helm upgrade --install aura ./helm/aura \
+        helm upgrade --install aura ./deploy/helm/aura \
           --namespace aura \
           --create-namespace \
           --reuse-values \
