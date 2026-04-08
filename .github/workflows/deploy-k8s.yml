@@ -194,6 +194,16 @@ jobs:
         mkdir -p ~/.kube
         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
 
+    - name: Validate kubeconfig endpoint for GitHub-hosted runner
+      run: |
+        SERVER_URL="$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')"
+        echo "Kubernetes API server: $SERVER_URL"
+        if [[ "$SERVER_URL" =~ ^https?://(127\.0\.0\.1|localhost)(:[0-9]+)?(/|$) ]]; then
+          echo "::error::KUBE_CONFIG_DATA points to a localhost API endpoint ($SERVER_URL)."
+          echo "::error::GitHub-hosted runners cannot access your local cluster. Use self-hosted runner or a publicly reachable cluster API endpoint."
+          exit 1
+        fi
+
     - name: Create namespace
       run: kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
