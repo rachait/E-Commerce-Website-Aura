@@ -54,8 +54,9 @@ async def send_otp(request: SendOTPRequest):
         raise HTTPException(status_code=400, detail="Invalid email format")
     
     try:
-        # Generate OTP
-        otp = generate_otp(6)
+        # If SMTP credentials are missing, use a deterministic OTP for local/demo usage.
+        smtp_configured = bool(settings.SENDER_EMAIL and settings.SENDER_PASSWORD)
+        otp = generate_otp(6) if smtp_configured else "123456"
         otp_expiry = datetime.utcnow() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
         
         # Store OTP in database
@@ -73,16 +74,21 @@ async def send_otp(request: SendOTPRequest):
             upsert=True
         )
         
-        # Send OTP via email
-        name = request.name or "User"
-        success = await send_otp_email(request.email, otp, name)
+        # Send OTP via email when SMTP is configured.
+        if smtp_configured:
+            name = request.name or "User"
+            success = await send_otp_email(request.email, otp, name)
+            if not success:
+                raise HTTPException(status_code=500, detail="Failed to send OTP email. Please check email configuration.")
+            return SendOTPResponse(
+                success=True,
+                message=f"OTP sent to {request.email}"
+            )
 
-        if not success:
-            raise HTTPException(status_code=500, detail="Failed to send OTP email. Please check email configuration.")
-
+            print(f"⚠️  SMTP not configured; using development OTP 123456 for {request.email}")
         return SendOTPResponse(
             success=True,
-            message=f"OTP sent to {request.email}"
+            message="Email service not configured. Use OTP: 123456"
         )
 
     except HTTPException as e:
