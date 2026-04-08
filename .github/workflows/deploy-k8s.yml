@@ -5,6 +5,15 @@ on:
     branches:
     - main
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Runner to use for deployment"
+        required: true
+        default: self-hosted
+        type: choice
+        options:
+        - self-hosted
+        - ubuntu-latest
 
 permissions:
   contents: read
@@ -15,8 +24,10 @@ env:
   NAMESPACE: aura
 
 jobs:
-  deploy:
-    runs-on: [self-hosted, windows, kubernetes, docker]
+  deploy-self-hosted:
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.runner == 'self-hosted') }}
+    runs-on: [self-hosted, windows]
+    timeout-minutes: 30
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -30,22 +41,147 @@ jobs:
 
     - name: Log in to GHCR
       run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      shell: cmd
+        "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      shell: powershell
 
     - name: Build and push backend image
       run: |
         docker build -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:sha-${{ github.sha }} -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:latest ./backend
         docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:sha-${{ github.sha }}
         docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:latest
-      shell: cmd
+      shell: powershell
 
     - name: Build and push frontend image
       run: |
         docker build -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:sha-${{ github.sha }} -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:latest ./frontend
         docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:sha-${{ github.sha }}
         docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:latest
-      shell: cmd
+      shell: powershell
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4
+
+    - name: Configure kubeconfig
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      run: |
+        $kubeDir = Join-Path $env:USERPROFILE ".kube"
+        if (-not (Test-Path $kubeDir)) {
+          New-Item -ItemType Directory -Path $kubeDir -Force | Out-Null
+        }
+        $kubeConfigPath = Join-Path $kubeDir "config"
+        $decodedBytes = [System.Convert]::FromBase64String($env:KUBE_CONFIG_DATA)
+        [System.IO.File]::WriteAllBytes($kubeConfigPath, $decodedBytes)
+        Write-Host "Kubeconfig configured"
+      shell: powershell
+
+    - name: Create namespace
+      run: kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Apply backend secret
+      env:
+        MONGO_URL: ${{ secrets.MONGO_URL }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        EMERGENT_LLM_KEY: ${{ secrets.EMERGENT_LLM_KEY }}
+        RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
+        RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET }}
+        CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+        CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+        CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      run: |
+        kubectl -n ${{ env.NAMESPACE }} create secret generic aura-backend-secrets `
+          --from-literal=MONGO_URL="$env:MONGO_URL" `
+          --from-literal=DB_NAME="$env:DB_NAME" `
+          --from-literal=CORS_ORIGINS="$env:CORS_ORIGINS" `
+          --from-literal=JWT_SECRET="$env:JWT_SECRET" `
+          --from-literal=EMERGENT_LLM_KEY="$env:EMERGENT_LLM_KEY" `
+          --from-literal=RAZORPAY_KEY_ID="$env:RAZORPAY_KEY_ID" `
+          --from-literal=RAZORPAY_KEY_SECRET="$env:RAZORPAY_KEY_SECRET" `
+          --from-literal=CLOUDINARY_CLOUD_NAME="$env:CLOUDINARY_CLOUD_NAME" `
+          --from-literal=CLOUDINARY_API_KEY="$env:CLOUDINARY_API_KEY" `
+          --from-literal=CLOUDINARY_API_SECRET="$env:CLOUDINARY_API_SECRET" `
+          --from-literal=OPENAI_API_KEY="$env:OPENAI_API_KEY" `
+          --from-literal=SENDER_EMAIL="$env:SENDER_EMAIL" `
+          --from-literal=SENDER_PASSWORD="$env:SENDER_PASSWORD" `
+          --from-literal=SMTP_SERVER="$env:SMTP_SERVER" `
+          --from-literal=SMTP_PORT="$env:SMTP_PORT" `
+          --dry-run=client -o yaml | kubectl apply -f -
+      shell: powershell
+
+    - name: Apply GHCR pull secret (optional)
+      env:
+        GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
+        GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+        GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      run: |
+        if ($env:GHCR_PULL_SECRET_NAME -and $env:GHCR_USERNAME -and $env:GHCR_TOKEN) {
+          kubectl -n ${{ env.NAMESPACE }} create secret docker-registry $env:GHCR_PULL_SECRET_NAME --docker-server=${{ env.REGISTRY }} --docker-username="$env:GHCR_USERNAME" --docker-password="$env:GHCR_TOKEN" --dry-run=client -o yaml | kubectl apply -f -
+          Write-Host "GHCR pull secret created"
+        } else {
+          Write-Host "Skipping GHCR pull secret"
+        }
+      shell: powershell
+
+    - name: Deploy with Helm
+      env:
+        GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
+      run: |
+        helm upgrade --install aura ./helm/aura `
+          --namespace ${{ env.NAMESPACE }} `
+          --create-namespace `
+          --set global.namespace=${{ env.NAMESPACE }} `
+          --set ingress.host=${{ secrets.APP_HOST }} `
+          --set backend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-backend `
+          --set backend.image.tag=sha-${{ github.sha }} `
+          --set frontend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-frontend `
+          --set frontend.image.tag=sha-${{ github.sha }} `
+          --set monitoring.serviceMonitor.enabled=false
+      shell: powershell
+
+    - name: Verify rollout
+      run: |
+        kubectl -n ${{ env.NAMESPACE }} rollout status deploy/aura-aura-backend --timeout=180s
+        kubectl -n ${{ env.NAMESPACE }} rollout status deploy/aura-aura-frontend --timeout=180s
+
+  deploy-ubuntu:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.runner == 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Compute image naming variables
+      id: vars
+      run: |
+        owner_lc="${GITHUB_REPOSITORY_OWNER,,}"
+        echo "owner_lc=$owner_lc" >> "$GITHUB_OUTPUT"
+
+    - name: Log in to GHCR
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+    - name: Build and push backend image
+      run: |
+        docker build -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:sha-${{ github.sha }} -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:latest ./backend
+        docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:sha-${{ github.sha }}
+        docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-backend:latest
+
+    - name: Build and push frontend image
+      run: |
+        docker build -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:sha-${{ github.sha }} -t ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:latest ./frontend
+        docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:sha-${{ github.sha }}
+        docker push ghcr.io/${{ steps.vars.outputs.owner_lc }}/aura-frontend:latest
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v4
@@ -55,8 +191,8 @@ jobs:
 
     - name: Configure kubeconfig
       run: |
-        powershell -Command "$kubeDir = \"$env:USERPROFILE\.kube\"; if (-not (Test-Path $kubeDir)) { New-Item -ItemType Directory -Path $kubeDir -Force | Out-Null }; $configData = \"${{ secrets.KUBE_CONFIG_DATA }}\"; $decodedBytes = [System.Convert]::FromBase64String($configData); [System.IO.File]::WriteAllBytes(\"$kubeDir\config\", $decodedBytes); Write-Host \"Kubeconfig configured\""
-      shell: cmd
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
 
     - name: Create namespace
       run: kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
@@ -103,14 +239,25 @@ jobs:
         GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
         GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
       run: |
-        powershell -Command "if ($env:GHCR_PULL_SECRET_NAME -and $env:GHCR_USERNAME -and $env:GHCR_TOKEN) { kubectl -n ${{ env.NAMESPACE }} create secret docker-registry $env:GHCR_PULL_SECRET_NAME --docker-server=${{ env.REGISTRY }} --docker-username=\"$env:GHCR_USERNAME\" --docker-password=\"$env:GHCR_TOKEN\" --dry-run=client -o yaml | kubectl apply -f -; Write-Host \"GHCR pull secret created\" } else { Write-Host \"Skipping GHCR pull secret\" }"
-      shell: cmd
+        if [ -n "$GHCR_PULL_SECRET_NAME" ] && [ -n "$GHCR_USERNAME" ] && [ -n "$GHCR_TOKEN" ]; then
+          kubectl -n ${{ env.NAMESPACE }} create secret docker-registry "$GHCR_PULL_SECRET_NAME" --docker-server=${{ env.REGISTRY }} --docker-username="$GHCR_USERNAME" --docker-password="$GHCR_TOKEN" --dry-run=client -o yaml | kubectl apply -f -
+          echo "GHCR pull secret created"
+        else
+          echo "Skipping GHCR pull secret"
+        fi
 
     - name: Deploy with Helm
-      env:
-        GHCR_PULL_SECRET_NAME: ${{ secrets.GHCR_PULL_SECRET_NAME }}
-      run: helm upgrade --install aura ./helm/aura --namespace ${{ env.NAMESPACE }} --create-namespace --set global.namespace=${{ env.NAMESPACE }} --set ingress.host=${{ secrets.APP_HOST }} --set backend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-backend --set backend.image.tag=sha-${{ github.sha }} --set frontend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-frontend --set frontend.image.tag=sha-${{ github.sha }} --set monitoring.serviceMonitor.enabled=false
-      shell: cmd
+      run: |
+        helm upgrade --install aura ./helm/aura \
+          --namespace ${{ env.NAMESPACE }} \
+          --create-namespace \
+          --set global.namespace=${{ env.NAMESPACE }} \
+          --set ingress.host=${{ secrets.APP_HOST }} \
+          --set backend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-backend \
+          --set backend.image.tag=sha-${{ github.sha }} \
+          --set frontend.image.repository=${{ env.REGISTRY }}/${{ steps.vars.outputs.owner_lc }}/aura-frontend \
+          --set frontend.image.tag=sha-${{ github.sha }} \
+          --set monitoring.serviceMonitor.enabled=false
 
     - name: Verify rollout
       run: |
