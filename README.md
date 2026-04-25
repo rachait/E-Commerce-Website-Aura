@@ -1,45 +1,54 @@
 # AURA E-Commerce Platform
 
-AURA is a premium full-stack e-commerce platform built with a React + Vite frontend, a FastAPI backend, and MongoDB for persistence. The project includes product discovery, cart and checkout flows, order management, AI-assisted shopping features, payment integration, analytics, and Kubernetes-ready deployment.
+![Release](https://img.shields.io/github/v/release/rachait/E-Commerce-Website-Aura?include_prereleases)
+![CI](https://img.shields.io/github/actions/workflow/status/rachait/E-Commerce-Website-Aura/ci.yml?branch=main)
+![Tech](https://img.shields.io/badge/stack-React%20%7C%20FastAPI%20%7C%20MongoDB-111827)
+![Contributions welcome](https://img.shields.io/badge/contributions-welcome-16a34a)
 
-## Features
+AURA is a full-stack fashion e-commerce platform built for modern shopping experiences.
+It combines a React + Vite storefront with a FastAPI backend, MongoDB persistence, AI-assisted features, and production-ready deployment assets.
 
-- Responsive shopping UI with product browsing, filters, cart, checkout, and order pages
-- FastAPI REST backend for authentication, products, cart, orders, coupons, returns, and analytics
-- MongoDB-backed data model with startup seeding for admin and coupon data
-- Razorpay payment workflow and Cloudinary media support
-- AI chatbot and recommendation endpoints
-- Security and operations support with health checks, readiness probes, rate limiting, and Prometheus metrics
-- Docker, Docker Compose, Helm, and Kubernetes deployment assets
-- GitHub Actions CI for backend tests, frontend build validation, and Helm linting
+## Why AURA
+
+- Modern catalog browsing with filtering, search, cart, checkout, and order history
+- Smart backend APIs for auth, products, cart, coupons, returns, analytics, and payments
+- Better dev UX with local full-stack startup and Kubernetes/Docker deployment options
+- Real-world engineering concerns: health probes, rate limiting, metrics, CI/CD
+
+## Live Architecture
+
+```text
+Frontend (React/Vite) -> API Proxy -> FastAPI -> MongoDB
+						|
+					Payments/AI/Cloudinary
+```
+
+## Key Features
+
+- Product catalog with category views, sorting, and size/price filtering
+- Cart and checkout experience with coupon support
+- Authentication and account management
+- Admin-facing order/product management endpoints
+- AI chatbot/recommendations endpoints
+- Cloudinary media integration and Razorpay payment flow
+- Observability endpoints and Prometheus instrumentation
 
 ## Tech Stack
 
 - Frontend: React, Vite, React Router, Tailwind CSS, Framer Motion, Three.js
 - Backend: FastAPI, Uvicorn, Motor, PyMongo, Pydantic
 - Database: MongoDB
-- Payments: Razorpay
-- Media: Cloudinary
+- Integrations: Razorpay, Cloudinary
 - DevOps: Docker, Docker Compose, Kubernetes, Helm, GitHub Actions, Prometheus
-
-## Project Workflow
-
-1. Designed the application architecture and feature scope.
-2. Built the frontend user experience for browsing, filtering, and purchasing products.
-3. Implemented backend APIs for authentication, catalog, cart, checkout, orders, coupons, returns, and analytics.
-4. Connected MongoDB, Razorpay, Cloudinary, and AI endpoints.
-5. Added production safeguards such as health endpoints, security headers, rate limiting, and metrics.
-6. Set up CI to test the backend, build the frontend, and lint Helm charts.
-7. Prepared containerized and Kubernetes deployment workflows for local and production environments.
 
 ## Repository Structure
 
-- `backend/` - FastAPI application, models, routes, schemas, and utilities
-- `frontend/` - React/Vite client application
-- `deploy/` - Docker, Kubernetes, Helm, and demo scripts
-- `.github/workflows/` - CI pipeline
+- backend/ -> FastAPI app, routes, schemas, utilities, seed scripts
+- frontend/ -> React/Vite app and UI components
+- deploy/ -> Compose, Kubernetes, Helm, and local deployment guides
+- .github/workflows/ -> CI/CD workflows
 
-## Local Development
+## Quick Start
 
 ### Prerequisites
 
@@ -47,7 +56,21 @@ AURA is a premium full-stack e-commerce platform built with a React + Vite front
 - Node.js 20+
 - MongoDB running locally
 
-### Backend
+### Install and Run (recommended)
+
+From repo root:
+
+```powershell
+npm install
+npm run dev
+```
+
+This starts:
+
+- Backend on http://localhost:8000
+- Frontend on http://localhost:3000
+
+### Manual backend setup (first time)
 
 ```powershell
 cd backend
@@ -57,7 +80,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend
+### Manual frontend setup
 
 ```powershell
 cd frontend
@@ -65,27 +88,15 @@ npm install
 npm run dev
 ```
 
-### Start Frontend and Backend Together (One Command)
-
-From the repository root:
-
-```powershell
-npm install
-npm run dev
-```
-
-Make sure backend Python dependencies are installed at least once (for the Python environment you are using):
+## Seed Demo Data
 
 ```powershell
 cd backend
-pip install -r requirements.txt
-cd ..
+$env:FORCE_RESEED_PRODUCTS='true'
+python seed_db.py
 ```
 
-This runs both services in parallel:
-
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:3000`
+Use FORCE_RESEED_PRODUCTS=true when you want to replace existing product data with the latest seed catalog.
 
 ## Build and Test
 
@@ -102,51 +113,50 @@ cd frontend
 npm run build
 ```
 
-## Docker
+## Deployment
 
-### Backend image
-
-```powershell
-docker build -t aura-backend ./backend
-```
-
-### Frontend image
-
-```powershell
-docker build -t aura-frontend ./frontend
-```
-
-### Local stack
+### Docker Compose
 
 ```powershell
 docker compose -f deploy/docker-compose.yml up -d
 ```
 
-## Kubernetes Deployment
-
-Use the Helm chart in `deploy/helm/aura`.
+### Helm/Kubernetes
 
 ```powershell
 helm upgrade --install aura ./deploy/helm/aura --namespace aura --create-namespace
 ```
 
-For Minikube, see `deploy/MINIKUBE_GUIDE.md`.
+See deploy/MINIKUBE_GUIDE.md for local cluster instructions.
 
-## CI Pipeline
+## API Health Endpoints
 
-The GitHub Actions workflow runs on pull requests and pushes to `main`.
+- /health
+- /health/live
+- /health/ready
+- /metrics
 
-- Backend tests with Python 3.12
-- Frontend production build with Node.js 20
-- Helm chart linting
+## Contributing
 
-## Health Endpoints
+Contributions are welcome.
 
-- `/health` - application health status
-- `/health/live` - liveness probe
-- `/health/ready` - readiness probe
-- `/metrics` - Prometheus metrics endpoint
+- Read CONTRIBUTING.md for setup and PR process
+- Use issue templates to report bugs or suggest features
+- Follow the pull request checklist before requesting review
+
+## Community & Support
+
+- Bug reports and feature ideas: GitHub Issues
+- Security reports: SECURITY.md
+- Code of conduct: CODE_OF_CONDUCT.md
+
+## Roadmap
+
+- Add visual screenshot gallery/GIF demos to README
+- Improve search relevance and product recommendations
+- Expand test coverage for critical checkout/payment paths
+- Add stricter release automation and changelog generation
 
 ## License
 
-No license has been specified for this project.
+No license file is currently defined.
