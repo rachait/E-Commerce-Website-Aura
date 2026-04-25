@@ -2,6 +2,78 @@ import axios from 'axios'
 import { getProductImageCandidates } from './images'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || ''
+const RETRYABLE_METHODS = new Set(['get', 'head', 'options'])
+
+const apiState = {
+  isOnline: true,
+  isReconnecting: false,
+  lastErrorAt: null
+}
+
+const statusSubscribers = new Set()
+
+const notifyApiStatusChange = () => {
+  statusSubscribers.forEach((callback) => callback({ ...apiState }))
+}
+
+const setApiState = (nextState) => {
+  const hasChange = Object.keys(nextState).some((key) => apiState[key] !== nextState[key])
+  if (!hasChange) {
+    return
+  }
+
+  Object.assign(apiState, nextState)
+  notifyApiStatusChange()
+}
+
+export const getApiConnectionState = () => ({ ...apiState })
+
+export const onApiStatusChange = (callback) => {
+  statusSubscribers.add(callback)
+  callback({ ...apiState })
+  return () => statusSubscribers.delete(callback)
+}
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const apiClient = axios.create({
+  baseURL: API_URL
+})
+
+apiClient.interceptors.response.use(
+  (response) => {
+    setApiState({ isOnline: true, isReconnecting: false })
+    return response
+  },
+  async (error) => {
+    const config = error?.config || {}
+    const method = (config.method || 'get').toLowerCase()
+    const hasResponse = Boolean(error?.response)
+    const isNetworkIssue = !hasResponse
+
+    if (!isNetworkIssue) {
+      return Promise.reject(error)
+    }
+
+    const attempt = config.__retryCount || 0
+    const shouldRetry = RETRYABLE_METHODS.has(method) && attempt < 2
+
+    setApiState({
+      isOnline: false,
+      isReconnecting: shouldRetry,
+      lastErrorAt: Date.now()
+    })
+
+    if (!shouldRetry) {
+      return Promise.reject(error)
+    }
+
+    config.__retryCount = attempt + 1
+    const retryDelayMs = 500 * (2 ** attempt)
+    await delay(retryDelayMs)
+    return apiClient(config)
+  }
+)
 
 const normalizeProduct = (product) => {
   if (!product || typeof product !== 'object') {
@@ -16,120 +88,120 @@ const normalizeProduct = (product) => {
 
 export const authAPI = {
   register: (email, password, name) =>
-    axios.post(`${API_URL}/api/auth/register`, { email, password, name }),
+    apiClient.post('/api/auth/register', { email, password, name }),
   login: (email, password) =>
-    axios.post(`${API_URL}/api/auth/login`, { email, password }),
+    apiClient.post('/api/auth/login', { email, password }),
   getCurrentUser: () =>
-    axios.get(`${API_URL}/api/auth/me`),
+    apiClient.get('/api/auth/me'),
   getAdminUsers: (limit = 50, offset = 0, search = '') =>
-    axios.get(`${API_URL}/api/auth/admin/users`, { params: { limit, offset, search } })
+    apiClient.get('/api/auth/admin/users', { params: { limit, offset, search } })
 }
 
 export const productsAPI = {
   getAll: (category, search, limit = 20, offset = 0, extraParams = {}) =>
-    axios
-      .get(`${API_URL}/api/products`, { params: { category, search, limit, offset, ...extraParams } })
+    apiClient
+      .get('/api/products', { params: { category, search, limit, offset, ...extraParams } })
       .then((response) => ({
         ...response,
         data: Array.isArray(response.data) ? response.data.map(normalizeProduct) : []
       })),
   getFeatured: (limit = 8) =>
-    axios
-      .get(`${API_URL}/api/products/featured`, { params: { limit } })
+    apiClient
+      .get('/api/products/featured', { params: { limit } })
       .then((response) => ({
         ...response,
         data: Array.isArray(response.data) ? response.data.map(normalizeProduct) : []
       })),
   getById: (id) =>
-    axios
-      .get(`${API_URL}/api/products/${id}`)
+    apiClient
+      .get(`/api/products/${id}`)
       .then((response) => ({
         ...response,
         data: normalizeProduct(response.data)
       })),
   getReviews: (id, limit = 20) =>
-    axios.get(`${API_URL}/api/products/${id}/reviews`, { params: { limit } }),
+    apiClient.get(`/api/products/${id}/reviews`, { params: { limit } }),
   addReview: (id, rating, comment) =>
-    axios.post(`${API_URL}/api/products/${id}/reviews`, { rating, comment }),
+    apiClient.post(`/api/products/${id}/reviews`, { rating, comment }),
   trackView: (id) =>
-    axios.post(`${API_URL}/api/products/${id}/track-view`),
+    apiClient.post(`/api/products/${id}/track-view`),
   create: (data) =>
-    axios.post(`${API_URL}/api/products`, data),
+    apiClient.post('/api/products', data),
   update: (id, data) =>
-    axios.put(`${API_URL}/api/products/${id}`, data),
+    apiClient.put(`/api/products/${id}`, data),
   delete: (id) =>
-    axios.delete(`${API_URL}/api/products/${id}`)
+    apiClient.delete(`/api/products/${id}`)
 }
 
 export const cartAPI = {
   get: () =>
-    axios.get(`${API_URL}/api/cart`),
+    apiClient.get('/api/cart'),
   add: (productId, quantity, size) =>
-    axios.post(`${API_URL}/api/cart/add`, { productId, quantity, size }),
+    apiClient.post('/api/cart/add', { productId, quantity, size }),
   update: (productId, quantity) =>
-    axios.put(`${API_URL}/api/cart/update`, { productId, quantity }),
+    apiClient.put('/api/cart/update', { productId, quantity }),
   remove: (productId) =>
-    axios.delete(`${API_URL}/api/cart/remove/${productId}`),
+    apiClient.delete(`/api/cart/remove/${productId}`),
   clear: () =>
-    axios.delete(`${API_URL}/api/cart/clear`)
+    apiClient.delete('/api/cart/clear')
 }
 
 export const ordersAPI = {
   getAll: () =>
-    axios.get(`${API_URL}/api/orders`),
+    apiClient.get('/api/orders'),
   getById: (id) =>
-    axios.get(`${API_URL}/api/orders/${id}`),
+    apiClient.get(`/api/orders/${id}`),
   getInvoiceUrl: (id) =>
     `${API_URL}/api/orders/${id}/invoice`,
   create: (data) =>
-    axios.post(`${API_URL}/api/orders/create`, data),
+    apiClient.post('/api/orders/create', data),
   getAllAdmin: () =>
-    axios.get(`${API_URL}/api/orders/admin/all`),
+    apiClient.get('/api/orders/admin/all'),
   updateStatus: (id, status) =>
-    axios.put(`${API_URL}/api/orders/${id}/status`, { status })
+    apiClient.put(`/api/orders/${id}/status`, { status })
 }
 
 export const couponsAPI = {
   validate: (code, cartTotal) =>
-    axios.post(`${API_URL}/api/coupons/validate`, { code, cartTotal })
+    apiClient.post('/api/coupons/validate', { code, cartTotal })
 }
 
 export const accountAPI = {
   getAddresses: () =>
-    axios.get(`${API_URL}/api/account/addresses`),
+    apiClient.get('/api/account/addresses'),
   addAddress: (address) =>
-    axios.post(`${API_URL}/api/account/addresses`, address),
+    apiClient.post('/api/account/addresses', address),
   updateAddress: (addressId, address) =>
-    axios.put(`${API_URL}/api/account/addresses/${addressId}`, address),
+    apiClient.put(`/api/account/addresses/${addressId}`, address),
   deleteAddress: (addressId) =>
-    axios.delete(`${API_URL}/api/account/addresses/${addressId}`),
+    apiClient.delete(`/api/account/addresses/${addressId}`),
   getPaymentMethods: () =>
-    axios.get(`${API_URL}/api/account/payment-methods`),
+    apiClient.get('/api/account/payment-methods'),
   addPaymentMethod: (payload) =>
-    axios.post(`${API_URL}/api/account/payment-methods`, payload)
+    apiClient.post('/api/account/payment-methods', payload)
 }
 
 export const returnsAPI = {
   create: (orderId, reason) =>
-    axios.post(`${API_URL}/api/returns`, { orderId, reason }),
+    apiClient.post('/api/returns', { orderId, reason }),
   getMine: () =>
-    axios.get(`${API_URL}/api/returns`),
+    apiClient.get('/api/returns'),
   getAllAdmin: () =>
-    axios.get(`${API_URL}/api/returns/admin`),
+    apiClient.get('/api/returns/admin'),
   updateStatus: (returnId, status) =>
-    axios.put(`${API_URL}/api/returns/${returnId}/status`, null, { params: { status } })
+    apiClient.put(`/api/returns/${returnId}/status`, null, { params: { status } })
 }
 
 export const analyticsAPI = {
   getAdminOverview: () =>
-    axios.get(`${API_URL}/api/analytics/admin/overview`)
+    apiClient.get('/api/analytics/admin/overview')
 }
 
 export const paymentAPI = {
   createOrder: (totalAmount, orderId, paymentMethod = 'razorpay') =>
-    axios.post(`${API_URL}/api/payment/create-order`, { totalAmount, orderId, paymentMethod }),
+    apiClient.post('/api/payment/create-order', { totalAmount, orderId, paymentMethod }),
   verify: (razorpayOrderId, razorpayPaymentId, razorpaySignature) =>
-    axios.post(`${API_URL}/api/payment/verify`, {
+    apiClient.post('/api/payment/verify', {
       razorpay_order_id: razorpayOrderId,
       razorpay_payment_id: razorpayPaymentId,
       razorpay_signature: razorpaySignature
@@ -138,16 +210,16 @@ export const paymentAPI = {
 
 export const cloudinaryAPI = {
   getSignature: () =>
-    axios.get(`${API_URL}/api/cloudinary/signature`)
+    apiClient.get('/api/cloudinary/signature')
 }
 
 export const aiAPI = {
   chat: (messages, sessionId) =>
-    axios.post(`${API_URL}/api/ai/chat`, { messages, sessionId }),
+    apiClient.post('/api/ai/chat', { messages, sessionId }),
   getRecommendations: (userId, limit = 5) =>
-    axios.post(`${API_URL}/api/ai/recommendations`, { userId, limit }),
+    apiClient.post('/api/ai/recommendations', { userId, limit }),
   getRecentlyViewed: (limit = 10) =>
-    axios.get(`${API_URL}/api/ai/recently-viewed`, { params: { limit } }),
+    apiClient.get('/api/ai/recently-viewed', { params: { limit } }),
   getStyleAdvice: (productId, userPreferences) =>
-    axios.post(`${API_URL}/api/ai/style-advisor`, { productId, userPreferences })
+    apiClient.post('/api/ai/style-advisor', { productId, userPreferences })
 }

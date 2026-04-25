@@ -3,7 +3,7 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timedelta
+from datetime import datetime
 from config import settings
 import re
 
@@ -17,9 +17,11 @@ async def send_otp_email(email: str, otp: str, name: str = "User") -> bool:
     Returns True if successful, False otherwise
     """
     try:
-        # Gmail SMTP settings
+        # SMTP settings
         sender_email = settings.SENDER_EMAIL
         sender_password = settings.SENDER_PASSWORD
+        smtp_server = settings.SMTP_SERVER
+        smtp_port = settings.SMTP_PORT
         
         if not sender_email or not sender_password:
             print("⚠️  Email credentials not configured in .env file")
@@ -83,15 +85,23 @@ async def send_otp_email(email: str, otp: str, name: str = "User") -> bool:
         message.attach(part)
         
         # Send email
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        if smtp_port == 465:
+          with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, email, message.as_string())
+        else:
+          with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, email, message.as_string())
         
-        print(f"✅ OTP sent to {email}")
+        print(f"[OK] OTP sent to {email}")
         return True
         
     except Exception as e:
-        print(f"❌ Failed to send OTP email: {str(e)}")
+        print(f"[ERROR] Failed to send OTP email: {str(e)}")
         return False
 
 def is_valid_otp(stored_otp: str, provided_otp: str, expiry_time: datetime) -> bool:

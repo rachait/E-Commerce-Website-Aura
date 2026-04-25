@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ShoppingBag, Heart } from 'lucide-react'
@@ -11,7 +11,7 @@ const PRODUCT_IMAGE_FALLBACK = `data:image/svg+xml;charset=UTF-8,${encodeURIComp
   '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#18181b"/><text x="50%" y="50%" fill="#f4f4f5" font-size="32" text-anchor="middle" dominant-baseline="middle" font-family="Arial">AURA</text></svg>'
 )}`
 
-export default function ProductCard({ product }) {
+function ProductCard({ product }) {
   const { isAuthenticated } = useAuth()
   const { isInWishlist, addToWishlist } = useWishlist()
   const [showQuickAdd, setShowQuickAdd] = useState(false)
@@ -28,7 +28,7 @@ export default function ProductCard({ product }) {
     setImageSrc(imageCandidates[0])
   }, [imageCandidates])
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     if (imageIndex < imageCandidates.length - 1) {
       const nextIndex = imageIndex + 1
       setImageIndex(nextIndex)
@@ -37,12 +37,12 @@ export default function ProductCard({ product }) {
     }
 
     setImageSrc(PRODUCT_IMAGE_FALLBACK)
-  }
+  }, [imageCandidates, imageIndex])
 
-  const handleWishlistToggle = (e) => {
+  const handleWishlistToggle = useCallback((e) => {
     e.preventDefault()
     addToWishlist(product)
-  }
+  }, [addToWishlist, product])
 
   return (
     <motion.div
@@ -152,3 +152,5 @@ export default function ProductCard({ product }) {
     </motion.div>
   )
 }
+
+export default memo(ProductCard)

@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { productsAPI } from '../utils/api'
 import ProductCard from '../components/ProductCard'
 import { motion } from 'framer-motion'
 import { ChevronDown, X } from 'lucide-react'
+
+const DEFAULT_MIN_PRICE = 0
+const DEFAULT_MAX_PRICE = 50000
+const FETCH_LIMIT = 200
+
+const clampPrice = (value) => Math.min(DEFAULT_MAX_PRICE, Math.max(DEFAULT_MIN_PRICE, Number(value) || 0))
 
 const normalizeText = (value) =>
   String(value || '')
@@ -35,17 +41,41 @@ const isWomenClothing = (product) => {
 export default function Products() {
   const { category } = useParams()
   const normalizedCategory = String(category || '').toLowerCase()
-  const [products, setProducts] = useState([])
+  const [rawProducts, setRawProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortBy, setSortBy] = useState('newest')
-  const [priceRange, setPriceRange] = useState([0, 50000])
+  const [priceRange, setPriceRange] = useState([DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE])
   const [selectedSizes, setSelectedSizes] = useState([])
   const [showFilters, setShowFilters] = useState(true)
 
-  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+  const sizeOptions = useMemo(() => {
+    const dynamic = Array.from(
+      new Set(
+        rawProducts
+          .flatMap((product) => (Array.isArray(product?.sizes) ? product.sizes : []))
+          .map((size) => String(size).toUpperCase())
+          .filter(Boolean)
+      )
+    )
+
+    const preferred = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'ONE SIZE']
+    const sortedPreferred = preferred.filter((size) => dynamic.includes(size))
+    const extras = dynamic.filter((size) => !preferred.includes(size)).sort()
+    return [...sortedPreferred, ...extras]
+  }, [rawProducts])
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
+    let cancelled = false
+
     const fetchProducts = async () => {
       try {
         setLoading(true)
@@ -54,10 +84,10 @@ export default function Products() {
         let filtered = []
 
         if (normalizedCategory === 'featured') {
-          const response = await productsAPI.getFeatured(60)
+          const response = await productsAPI.getFeatured(FETCH_LIMIT)
           filtered = response.data
         } else {
-          const response = await productsAPI.getAll(isSpecialCategory ? null : category, search, 80, 0)
+          const response = await productsAPI.getAll(isSpecialCategory ? null : category, debouncedSearch, FETCH_LIMIT, 0)
           filtered = response.data
 
           if (normalizedCategory === 'men') {
@@ -75,34 +105,56 @@ export default function Products() {
           }
         }
 
-        // Filter by price
-        filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1])
-
-        // Filter by selected sizes
-        if (selectedSizes.length > 0) {
-          filtered = filtered.filter((p) =>
-            Array.isArray(p.sizes) && p.sizes.some((size) => selectedSizes.includes(size))
+        if (debouncedSearch.trim()) {
+          const term = debouncedSearch.trim().toLowerCase()
+          filtered = filtered.filter((product) =>
+            `${product?.name || ''} ${product?.description || ''} ${product?.category || ''} ${product?.subcategory || ''}`
+              .toLowerCase()
+              .includes(term)
           )
         }
 
-        // Sort
-        if (sortBy === 'price-low') {
-          filtered.sort((a, b) => a.price - b.price)
-        } else if (sortBy === 'price-high') {
-          filtered.sort((a, b) => b.price - a.price)
-        } else if (sortBy === 'newest') {
-          filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        if (!cancelled) {
+          setRawProducts(filtered)
         }
-
-        setProducts(filtered)
       } catch (error) {
-        console.error('Failed to fetch products:', error)
+        if (!cancelled) {
+          console.error('Failed to fetch products:', error)
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
+
     fetchProducts()
-  }, [category, normalizedCategory, search, sortBy, priceRange, selectedSizes])
+
+    return () => {
+      cancelled = true
+    }
+  }, [category, normalizedCategory, debouncedSearch])
+
+  const products = useMemo(() => {
+    let filtered = rawProducts.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1])
+
+    if (selectedSizes.length > 0) {
+      filtered = filtered.filter((p) =>
+        Array.isArray(p.sizes) && p.sizes.some((size) => selectedSizes.includes(size))
+      )
+    }
+
+    const sorted = [...filtered]
+    if (sortBy === 'price-low') {
+      sorted.sort((a, b) => a.price - b.price)
+    } else if (sortBy === 'price-high') {
+      sorted.sort((a, b) => b.price - a.price)
+    } else {
+      sorted.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    }
+
+    return sorted
+  }, [rawProducts, priceRange, selectedSizes, sortBy])
 
   const categoryLabel =
     normalizedCategory === 'new-collection'
@@ -160,28 +212,34 @@ export default function Products() {
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      min="0"
-                      max="50000"
+                      min={DEFAULT_MIN_PRICE}
+                      max={DEFAULT_MAX_PRICE}
                       value={priceRange[0]}
-                      onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                      onChange={(e) => {
+                        const nextMin = clampPrice(e.target.value)
+                        setPriceRange([Math.min(nextMin, priceRange[1]), priceRange[1]])
+                      }}
                       className="w-full bg-zinc-900 border border-zinc-700 rounded-sm p-2 text-sm"
                     />
                     <span className="text-zinc-500">-</span>
                     <input
                       type="number"
-                      min="0"
-                      max="50000"
+                      min={DEFAULT_MIN_PRICE}
+                      max={DEFAULT_MAX_PRICE}
                       value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                      onChange={(e) => {
+                        const nextMax = clampPrice(e.target.value)
+                        setPriceRange([priceRange[0], Math.max(nextMax, priceRange[0])])
+                      }}
                       className="w-full bg-zinc-900 border border-zinc-700 rounded-sm p-2 text-sm"
                     />
                   </div>
                   <input
                     type="range"
-                    min="0"
-                    max="50000"
+                    min={DEFAULT_MIN_PRICE}
+                    max={DEFAULT_MAX_PRICE}
                     value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                    onChange={(e) => setPriceRange([priceRange[0], Math.max(clampPrice(e.target.value), priceRange[0])])}
                     className="w-full"
                   />
                   <p className="text-zinc-400 text-sm">₹{priceRange[0]} - ₹{priceRange[1]}</p>
@@ -192,7 +250,7 @@ export default function Products() {
               <div>
                 <label className="block font-heading font-bold mb-3 text-zinc-100">Sizes</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {sizes.map(size => (
+                  {sizeOptions.map(size => (
                     <button
                       key={size}
                       onClick={() => toggleSize(size)}
@@ -213,7 +271,7 @@ export default function Products() {
                 <button
                   onClick={() => {
                     setSearch('')
-                    setPriceRange([0, 50000])
+                    setPriceRange([DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE])
                     setSelectedSizes([])
                   }}
                   className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 transition"
@@ -254,7 +312,7 @@ export default function Products() {
                 <button
                   onClick={() => {
                     setSearch('')
-                    setPriceRange([0, 50000])
+                    setPriceRange([DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE])
                     setSelectedSizes([])
                   }}
                   className="bg-zinc-900 border border-zinc-700 text-zinc-100 px-6 py-2 rounded-sm"

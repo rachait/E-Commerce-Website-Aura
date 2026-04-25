@@ -8,10 +8,21 @@ import { registerSW } from 'virtual:pwa-register'
 import { initVendorIntegrations } from './utils/vendorIntegrations'
 import { initSessionReplay } from './utils/sessionReplay'
 
-initGoogleTagManager()
-initVendorIntegrations()
-initSessionReplay()
-registerSW({ immediate: true })
+if (import.meta.env.PROD) {
+  initGoogleTagManager()
+  registerSW({ immediate: true })
+}
+
+const bootstrapOptionalIntegrations = () => {
+  initVendorIntegrations()
+  initSessionReplay()
+}
+
+if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+  window.requestIdleCallback(bootstrapOptionalIntegrations, { timeout: 1500 })
+} else {
+  setTimeout(bootstrapOptionalIntegrations, 600)
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

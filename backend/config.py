@@ -1,8 +1,10 @@
 import json
 from typing import Any
+from pathlib import Path
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 class Settings(BaseSettings):
     # ============ DATABASE ============
@@ -37,9 +39,10 @@ class Settings(BaseSettings):
     CLOUDINARY_API_SECRET: str = ""
     OPENAI_API_KEY: str = ""
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parent / ".env"),
+        env_file_encoding="utf-8"
+    )
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

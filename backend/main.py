@@ -12,6 +12,9 @@ from typing import Awaitable, cast
 from prometheus_fastapi_instrumentator import Instrumentator
 
 rate_limit_state = defaultdict(list)
+rate_limit_request_count = 0
+RATE_LIMIT_CLEANUP_INTERVAL = 250
+RATE_LIMIT_BYPASS_PATHS = {"/metrics", "/health", "/health/live", "/health/ready"}
 
 # Lifespan context manager
 @asynccontextmanager
@@ -105,21 +108,33 @@ app.add_middleware(
 
 @app.middleware("http")
 async def set_security_headers(request, call_next):
+    global rate_limit_request_count
     client_ip = (request.client.host if request.client else "unknown")
     now_ts = datetime.utcnow().timestamp()
     window = settings.RATE_LIMIT_WINDOW_SECONDS
     max_requests = settings.RATE_LIMIT_MAX_REQUESTS
 
-    request_times = rate_limit_state[client_ip]
-    rate_limit_state[client_ip] = [ts for ts in request_times if now_ts - ts < window]
+    if request.url.path not in RATE_LIMIT_BYPASS_PATHS:
+        rate_limit_request_count += 1
+        if rate_limit_request_count % RATE_LIMIT_CLEANUP_INTERVAL == 0:
+            stale_before = now_ts - window
+            for ip, timestamps in list(rate_limit_state.items()):
+                recent = [ts for ts in timestamps if ts >= stale_before]
+                if recent:
+                    rate_limit_state[ip] = recent
+                else:
+                    del rate_limit_state[ip]
 
-    if len(rate_limit_state[client_ip]) >= max_requests:
-        return JSONResponse(
-            status_code=429,
-            content={"detail": "Rate limit exceeded. Please try again shortly."}
-        )
+        request_times = rate_limit_state[client_ip]
+        rate_limit_state[client_ip] = [ts for ts in request_times if now_ts - ts < window]
 
-    rate_limit_state[client_ip].append(now_ts)
+        if len(rate_limit_state[client_ip]) >= max_requests:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Rate limit exceeded. Please try again shortly."}
+            )
+
+        rate_limit_state[client_ip].append(now_ts)
 
     response = await call_next(request)
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"

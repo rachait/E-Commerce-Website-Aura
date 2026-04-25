@@ -50,12 +50,32 @@ export const normalizeImageUrl = (value) => {
   return `${backendBase}/${trimmed.replace(/^\/+/, '')}`
 }
 
+const normalizeUnsplashUrl = (value) => {
+  if (typeof value !== 'string' || !value.includes('images.unsplash.com')) {
+    return value
+  }
+
+  try {
+    const url = new URL(value)
+    url.searchParams.set('auto', 'format')
+    url.searchParams.set('fit', 'crop')
+    url.searchParams.set('crop', 'faces')
+    url.searchParams.set('w', '800')
+    url.searchParams.set('h', '1000')
+    url.searchParams.set('q', '82')
+    return url.toString()
+  } catch {
+    return value
+  }
+}
+
 export const getProductImageCandidates = (product) => {
   const images = Array.isArray(product?.images) ? product.images : []
   const legacy = typeof product?.image === 'string' ? [product.image] : []
 
   const normalized = [...images, ...legacy]
     .map(normalizeImageUrl)
+    .map(normalizeUnsplashUrl)
     .filter(Boolean)
 
   return Array.from(new Set(normalized))
