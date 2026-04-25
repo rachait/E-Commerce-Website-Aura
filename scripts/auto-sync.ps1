@@ -1,6 +1,7 @@
 param(
     [string]$Remote = "origin",
     [int]$DebounceSeconds = 4,
+    [int]$CommitIntervalMinutes = 10,
     [switch]$RunOnce
 )
 
@@ -73,8 +74,12 @@ try {
     }
 
     $root = (Get-Location).Path
+    if ($CommitIntervalMinutes -lt 1) {
+        throw "CommitIntervalMinutes must be >= 1"
+    }
+
     Write-Info "Watching $root"
-    Write-Info "Branch: $branch | Remote: $Remote | Debounce: ${DebounceSeconds}s"
+    Write-Info "Branch: $branch | Remote: $Remote | Debounce: ${DebounceSeconds}s | Batch interval: ${CommitIntervalMinutes}m"
     Write-Info "Press Ctrl+C to stop."
 
     $watcher = New-Object System.IO.FileSystemWatcher
@@ -95,12 +100,13 @@ try {
         $script:lastEventAt = Get-Date
     }
 
-    $handlers = @(
-        Register-ObjectEvent -InputObject $watcher -EventName Changed -Action $eventAction,
-        Register-ObjectEvent -InputObject $watcher -EventName Created -Action $eventAction,
-        Register-ObjectEvent -InputObject $watcher -EventName Deleted -Action $eventAction,
-        Register-ObjectEvent -InputObject $watcher -EventName Renamed -Action $eventAction
-    )
+    $handlers = @()
+    $handlers += Register-ObjectEvent -InputObject $watcher -EventName Changed -Action $eventAction
+    $handlers += Register-ObjectEvent -InputObject $watcher -EventName Created -Action $eventAction
+    $handlers += Register-ObjectEvent -InputObject $watcher -EventName Deleted -Action $eventAction
+    $handlers += Register-ObjectEvent -InputObject $watcher -EventName Renamed -Action $eventAction
+
+    $script:lastSyncAt = (Get-Date).AddMinutes(-$CommitIntervalMinutes)
 
     while ($true) {
         Start-Sleep -Seconds 1
@@ -114,13 +120,22 @@ try {
             continue
         }
 
+        $sinceLastSync = (Get-Date) - $script:lastSyncAt
+        if ($sinceLastSync.TotalMinutes -lt $CommitIntervalMinutes) {
+            continue
+        }
+
         $script:pendingSync = $false
 
         try {
-            [void](Invoke-Sync -Branch $branch -RemoteName $Remote)
+            $didSync = Invoke-Sync -Branch $branch -RemoteName $Remote
+            if ($didSync) {
+                $script:lastSyncAt = Get-Date
+            }
         } catch {
             Write-Info "Sync failed: $($_.Exception.Message)"
             Write-Info "Watching continues."
+            $script:pendingSync = $true
         }
     }
 }
