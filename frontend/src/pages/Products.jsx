@@ -240,7 +240,7 @@ export default function Products() {
                     max={DEFAULT_MAX_PRICE}
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], Math.max(clampPrice(e.target.value), priceRange[0])])}
-                    className="w-full"
+                    className="w-full accent-white"
                   />
                   <p className="text-zinc-400 text-sm">₹{priceRange[0]} - ₹{priceRange[1]}</p>
                 </div>
@@ -252,16 +252,16 @@ export default function Products() {
                 <div className="grid grid-cols-3 gap-2">
                   {sizeOptions.map(size => (
                     <button
-                      key={size}
-                      onClick={() => toggleSize(size)}
-                      className={`py-2 rounded-sm font-medium text-sm transition ${
-                        selectedSizes.includes(size)
-                          ? 'bg-cyan-neon text-black'
-                          : 'bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-zinc-500'
-                      }`}
-                    >
-                      {size}
-                    </button>
+                        key={size}
+                        onClick={() => toggleSize(size)}
+                        className={`py-2 rounded-sm font-medium text-sm transition ${
+                          selectedSizes.includes(size)
+                            ? 'bg-zinc-900 text-white'
+                            : 'bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-zinc-500'
+                        }`}
+                      >
+                        {size}
+                      </button>
                   ))}
                 </div>
               </div>
@@ -304,8 +304,8 @@ export default function Products() {
             {/* Products Grid */}
             {loading ? (
               <div className="flex justify-center items-center h-96">
-                <div className="animate-pulse-neon text-cyan-neon text-2xl">Loading...</div>
-              </div>
+                  <div className="animate-pulse-neon text-white text-2xl">Loading...</div>
+                </div>
             ) : products.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-zinc-400 text-lg mb-4">No products found</p>

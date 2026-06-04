@@ -60,17 +60,17 @@ export default function Admin() {
 
   // Check if user is admin
   if (!user || user.role !== 'admin') {
-    return (
-      <div className="pt-24 pb-16">
+      return (
+        <div className="pt-24 pb-16 admin-layout">
         <div className="max-w-7xl mx-auto px-4 text-center min-h-96 flex flex-col justify-center">
           <h1 className="font-heading text-4xl font-bold mb-4">Access Denied</h1>
           <p className="text-text-secondary mb-6">You need admin privileges to access this page</p>
-          <button 
-            onClick={() => navigate('/')}
-            className="inline-block bg-cyan-neon text-black px-8 py-3 rounded-sm font-bold w-fit mx-auto"
-          >
-            Go Home
-          </button>
+            <button 
+              onClick={() => navigate('/')}
+              className="inline-block bg-zinc-900 text-white px-8 py-3 rounded-sm font-bold w-fit mx-auto"
+            >
+              Go Home
+            </button>
         </div>
       </div>
     )
@@ -212,9 +212,9 @@ export default function Admin() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-text-secondary text-sm font-body">{stat.label}</h3>
-                  <stat.icon className="text-cyan-neon opacity-50" size={24} />
+                  <stat.icon className="text-zinc-500 opacity-60" size={24} />
                 </div>
-                <p className="neon-text font-heading text-3xl font-bold">{stat.value}</p>
+                <p className="font-heading text-3xl font-bold text-zinc-900">{stat.value}</p>
               </motion.div>
             ))}
           </div>
@@ -222,14 +222,14 @@ export default function Admin() {
 
         {/* Tabs */}
         <div className="border border-text-secondary/20 rounded-sm overflow-hidden">
-          <div className="flex border-b border-text-secondary/20 bg-dark-surface">
+          <div className="flex border-b border-text-secondary/20 bg-white">
             {['dashboard', 'products', 'orders', 'users'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-4 font-heading font-bold capitalize transition ${
                   activeTab === tab
-                    ? 'text-cyan-neon border-b-2 border-cyan-neon'
+                    ? 'text-zinc-900 border-b-2 border-zinc-900'
                     : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
@@ -253,7 +253,7 @@ export default function Admin() {
                   ) : (
                     <div className="space-y-3">
                       {orders.slice(0, 5).map((order) => (
-                        <div key={order.id} className="border border-text-secondary/20 rounded-sm p-4 flex items-center justify-between hover:border-cyan-neon/30 transition">
+                        <div key={order.id} className="border border-text-secondary/20 rounded-sm p-4 flex items-center justify-between hover:border-zinc-200 transition">
                           <div>
                             <p className="font-body font-600">Order #{order.id?.slice(0, 8).toUpperCase()}</p>
                             <p className="text-text-secondary text-sm">₹{order.totalAmount?.toFixed(2)} • {order.status}</p>
@@ -303,7 +303,7 @@ export default function Admin() {
                   <h2 className="font-heading text-2xl font-bold">Products ({products.length})</h2>
                   <button
                     onClick={() => setShowProductForm(!showProductForm)}
-                    className="bg-cyan-neon text-black px-6 py-2 rounded-sm flex items-center gap-2 font-bold hover:bg-pink-neon transition"
+                    className="bg-zinc-900 text-white px-6 py-2 rounded-sm flex items-center gap-2 font-bold hover:bg-zinc-800 transition"
                   >
                     <Plus size={18} />
                     Add Product
@@ -330,7 +330,7 @@ export default function Admin() {
                             placeholder="Enter product name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                            className="w-full bg-white border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-zinc-400"
                             required
                           />
                         </div>
@@ -340,7 +340,7 @@ export default function Admin() {
                             name="category"
                             value={formData.category}
                             onChange={handleInputChange}
-                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary focus:outline-none focus:border-cyan-neon"
+                            className="w-full bg-white border border-text-secondary/20 rounded-sm p-3 text-text-primary focus:outline-none focus:border-zinc-400"
                           >
                             {categories.map(cat => (
                               <option key={cat} value={cat} className="bg-dark-bg">{cat}</option>
@@ -355,7 +355,7 @@ export default function Admin() {
                           placeholder="Enter product description"
                           value={formData.description}
                           onChange={handleInputChange}
-                          className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                          className="w-full bg-white border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-zinc-400"
                           rows="4"
                           required
                         />
@@ -374,7 +374,7 @@ export default function Admin() {
                             placeholder="0.00"
                             value={formData.price}
                             onChange={handleInputChange}
-                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-zinc-400"
                             step="0.01"
                             required
                           />
@@ -387,7 +387,7 @@ export default function Admin() {
                             placeholder="For discounts"
                             value={formData.originalPrice}
                             onChange={handleInputChange}
-                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-zinc-400"
                             step="0.01"
                           />
                         </div>
@@ -399,7 +399,7 @@ export default function Admin() {
                             placeholder="0"
                             value={formData.stock}
                             onChange={handleInputChange}
-                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                            className="w-full bg-dark-surface border border-text-secondary/20 rounded-sm p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:border-zinc-400"
                             required
                           />
                         </div>
@@ -416,10 +416,10 @@ export default function Admin() {
                             type="button"
                             onClick={() => toggleSize(size)}
                             className={`py-2 px-2 rounded-sm font-medium text-sm transition ${
-                              formData.sizes.includes(size)
-                                ? 'bg-cyan-neon text-black'
-                                : 'bg-dark-surface border border-text-secondary/20 hover:border-cyan-neon'
-                            }`}
+                                formData.sizes.includes(size)
+                                  ? 'bg-zinc-900 text-white'
+                                  : 'bg-white border border-text-secondary/20 hover:border-zinc-300'
+                              }`}
                           >
                             {size}
                           </button>
@@ -430,7 +430,7 @@ export default function Admin() {
                     {/* Image Upload */}
                     <div>
                       <h3 className="font-heading font-bold text-lg mb-4">Product Images</h3>
-                      <div className="border-2 border-dashed border-text-secondary/30 rounded-sm p-6 text-center hover:border-cyan-neon transition">
+                      <div className="border-2 border-dashed border-text-secondary/30 rounded-sm p-6 text-center hover:border-zinc-300 transition">
                         <input
                           type="file"
                           accept="image/*"
@@ -475,7 +475,7 @@ export default function Admin() {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 py-3 bg-cyan-neon text-black rounded-sm font-bold hover:bg-pink-neon transition disabled:opacity-50"
+                        className="flex-1 py-3 bg-zinc-900 text-white rounded-sm font-bold hover:bg-zinc-800 transition disabled:opacity-50"
                       >
                         {loading ? 'Adding...' : 'Add Product'}
                       </button>
@@ -496,7 +496,7 @@ export default function Admin() {
                           })
                           setImagePreview(null)
                         }}
-                        className="flex-1 py-3 border border-text-secondary/30 rounded-sm font-bold hover:border-cyan-neon hover:bg-cyan-neon/5 transition"
+                        className="flex-1 py-3 border border-text-secondary/30 rounded-sm font-bold hover:border-zinc-300 hover:bg-zinc-100 transition"
                       >
                         Cancel
                       </button>
@@ -507,14 +507,14 @@ export default function Admin() {
                 {/* Products List */}
                 {loading ? (
                   <div className="text-center py-12">
-                    <div className="animate-pulse-neon text-cyan-neon">Loading products...</div>
+                    <div className="animate-pulse-neon text-white">Loading products...</div>
                   </div>
                 ) : products.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-text-secondary mb-4">No products added yet</p>
                     <button
                       onClick={() => setShowProductForm(true)}
-                      className="bg-cyan-neon text-black px-6 py-2 rounded-sm font-bold hover:bg-pink-neon transition"
+                      className="bg-zinc-900 text-white px-6 py-2 rounded-sm font-bold hover:bg-zinc-800 transition"
                     >
                       Add your first product
                     </button>
@@ -522,7 +522,7 @@ export default function Admin() {
                 ) : (
                   <div className="space-y-3">
                     {products.map((product) => (
-                      <div key={product.id} className="border border-text-secondary/20 rounded-sm p-4 flex items-center justify-between hover:border-cyan-neon/30 transition">
+                      <div key={product.id} className="border border-text-secondary/20 rounded-sm p-4 flex items-center justify-between hover:border-zinc-200 transition">
                         <div className="flex items-center gap-4 flex-1">
                           <img 
                             src={product.images?.[0] || AURA_IMAGE_FALLBACK}
@@ -539,7 +539,7 @@ export default function Admin() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button className="p-2 rounded-sm border border-text-secondary/20 hover:border-cyan-neon transition">
+                          <button className="p-2 rounded-sm border border-text-secondary/20 hover:border-zinc-300 transition">
                             <Edit size={18} />
                           </button>
                           <button 
@@ -575,7 +575,7 @@ export default function Admin() {
                         </div>
                         <select
                           defaultValue={order.status || 'pending'}
-                          className="bg-dark-surface border border-text-secondary/20 rounded-sm p-2 text-sm focus:outline-none focus:border-cyan-neon"
+                          className="bg-white border border-text-secondary/20 rounded-sm p-2 text-sm focus:outline-none focus:border-zinc-400"
                           onChange={(e) => {
                             // Update order status
                             ordersAPI.updateStatus(order.id, e.target.value)

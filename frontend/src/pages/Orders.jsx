@@ -84,7 +84,7 @@ export default function Orders() {
   if (loading) {
     return (
       <div className="pt-24 pb-16 flex justify-center items-center min-h-screen">
-        <div className="animate-pulse-neon text-cyan-neon text-xl">Loading orders...</div>
+        <div className="animate-pulse-neon text-white text-xl">Loading orders...</div>
       </div>
     )
   }
@@ -130,7 +130,7 @@ export default function Orders() {
                 {/* Order Header */}
                 <button
                   onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-                  className="w-full p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between hover:bg-cyan-neon/5 transition text-left"
+                  className="w-full p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between hover:bg-white/5 transition text-left"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -176,7 +176,7 @@ export default function Orders() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="px-6 pb-6 border-t border-cyan-neon/20"
+                    className="px-6 pb-6 border-t border-text-secondary/20"
                   >
                     {/* Items */}
                     <div className="mb-6">
@@ -221,7 +221,7 @@ export default function Orders() {
                       </div>
                       <div className="flex justify-between text-text-secondary">
                         <span>Shipping</span>
-                        <span className="text-cyan-neon">Free</span>
+                        <span className="text-white/70">Free</span>
                       </div>
                       <div className="border-t border-text-secondary/20 pt-2 flex justify-between font-heading font-bold">
                         <span>Total</span>
@@ -230,12 +230,12 @@ export default function Orders() {
                     </div>
 
                     {order.timeline?.length > 0 && (
-                      <div className="mt-6">
+                        <div className="mt-6">
                         <h4 className="font-heading font-bold mb-3">Tracking Timeline</h4>
                         <div className="space-y-2">
                           {order.timeline.map((event, eventIdx) => (
                             <div key={`${order.id}-${eventIdx}`} className="flex items-start gap-3 text-sm">
-                              <div className="mt-1 h-2 w-2 rounded-full bg-cyan-neon" />
+                              <div className="mt-1 h-2 w-2 rounded-full bg-white" />
                               <div>
                                 <p className="capitalize text-text-primary">{event.status}</p>
                                 <p className="text-text-secondary">{event.note}</p>
@@ -254,12 +254,12 @@ export default function Orders() {
                       {order.paymentStatus === 'completed' && (
                         <button
                           onClick={() => setPreviewOrderId(order.id)}
-                          className="flex-1 py-2 glass-button rounded-lg text-sm hover:bg-cyan-neon/10 transition"
+                          className="flex-1 py-2 glass-button rounded-lg text-sm hover:bg-white/5 transition"
                         >
                           Preview Invoice
                         </button>
                       )}
-                      <button className="flex-1 py-2 border border-text-secondary/30 rounded-lg text-sm hover:border-cyan-neon transition">
+                      <button className="flex-1 py-2 border border-text-secondary/30 rounded-lg text-sm hover:border-text-secondary/50 transition">
                         Track Order
                       </button>
                       {order.status === 'delivered' && !order.returnStatus && (

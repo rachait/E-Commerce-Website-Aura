@@ -284,7 +284,7 @@ export default function Checkout() {
                 className="p-8 rounded-lg bg-black border border-zinc-800"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <MapPin size={24} className="text-cyan-neon" />
+                  <MapPin size={24} className="text-white" />
                   <h2 className="font-heading text-2xl font-bold">Shipping Address</h2>
                 </div>
 
@@ -411,7 +411,7 @@ export default function Checkout() {
                 className="p-8 rounded-lg bg-black border border-zinc-800"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <CreditCard size={24} className="text-cyan-neon" />
+                  <CreditCard size={24} className="text-white" />
                   <h2 className="font-heading text-2xl font-bold">Payment Method</h2>
                 </div>
 
@@ -419,7 +419,7 @@ export default function Checkout() {
                   <div
                     onClick={() => setPaymentMethod('razorpay')}
                     className={`glass-panel p-4 border-2 rounded-lg cursor-pointer transition ${
-                      paymentMethod === 'razorpay' ? 'border-cyan-neon' : 'border-zinc-700'
+                      paymentMethod === 'razorpay' ? 'border-white' : 'border-zinc-700'
                     }`}
                     role="button"
                     tabIndex={0}
@@ -436,7 +436,7 @@ export default function Checkout() {
                         value="razorpay"
                         checked={paymentMethod === 'razorpay'}
                         onChange={() => setPaymentMethod('razorpay')}
-                        className="accent-cyan-400"
+                        className="accent-white"
                       />
                       <span className="font-heading font-bold">Razorpay (Cards, UPI, Net Banking)</span>
                     </div>
@@ -446,7 +446,7 @@ export default function Checkout() {
                   <div
                     onClick={() => setPaymentMethod('gpay')}
                     className={`glass-panel p-4 border-2 rounded-lg cursor-pointer transition ${
-                      paymentMethod === 'gpay' ? 'border-cyan-neon' : 'border-zinc-700'
+                      paymentMethod === 'gpay' ? 'border-white' : 'border-zinc-700'
                     }`}
                     role="button"
                     tabIndex={0}
@@ -463,7 +463,7 @@ export default function Checkout() {
                         value="gpay"
                         checked={paymentMethod === 'gpay'}
                         onChange={() => setPaymentMethod('gpay')}
-                        className="accent-cyan-400"
+                        className="accent-white"
                       />
                       <span className="font-heading font-bold">Google Pay (UPI)</span>
                     </div>
@@ -499,12 +499,12 @@ export default function Checkout() {
                 className="p-8 rounded-lg bg-black border border-zinc-800"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <Package size={24} className="text-cyan-neon" />
+                  <Package size={24} className="text-white" />
                   <h2 className="font-heading text-2xl font-bold">Order Review</h2>
                 </div>
 
                 <div className="space-y-4 mb-6">
-                  <div className="pb-4 border-b border-cyan-neon/20">
+                  <div className="pb-4 border-b border-text-secondary/20">
                     <h3 className="font-heading font-bold mb-3">Shipping To:</h3>
                     <p className="text-text-secondary text-sm">
                       {formData.name}<br/>
@@ -514,7 +514,7 @@ export default function Checkout() {
                     </p>
                   </div>
 
-                  <div className="pb-4 border-b border-cyan-neon/20">
+                  <div className="pb-4 border-b border-text-secondary/20">
                     <h3 className="font-heading font-bold mb-3">Order Items:</h3>
                     <div className="space-y-2 text-sm text-text-secondary">
                       {cartItems.map((item, idx) => (
@@ -553,7 +553,7 @@ export default function Checkout() {
           >
             <h2 className="font-heading text-2xl font-bold mb-6">Order Summary</h2>
 
-            <div className="space-y-3 mb-6 pb-6 border-b border-cyan-neon/20 max-h-64 overflow-y-auto">
+            <div className="space-y-3 mb-6 pb-6 border-b border-text-secondary/20 max-h-64 overflow-y-auto">
               {cartItems.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm">
                   <span className="text-text-secondary">{item.productId} x {item.quantity}</span>
@@ -579,14 +579,14 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between text-text-secondary">
                 <span>Shipping</span>
-                <span className="text-cyan-neon">Free</span>
+                <span className="text-white/70">Free</span>
               </div>
             </div>
 
-            <div className="border-t border-cyan-neon/20 pt-6">
+            <div className="border-t border-text-secondary/20 pt-6">
               <div className="flex justify-between mb-4">
                 <span className="font-heading font-bold text-lg">Total</span>
-                <span className="neon-text font-bold text-2xl">₹{total.toFixed(2)}</span>
+                <span className="font-bold text-2xl text-white">₹{total.toFixed(2)}</span>
               </div>
             </div>
 

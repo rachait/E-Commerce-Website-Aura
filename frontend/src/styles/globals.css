@@ -48,7 +48,7 @@ html {
 }
 
 .glass-button {
-  @apply glass-panel px-6 py-3 font-body font-medium text-text-primary hover:border-cyan-neon transition-all duration-300;
+  @apply glass-panel px-6 py-3 font-body font-medium text-text-primary hover:border-white/30 transition-all duration-300;
 }
 
 .neon-glow {
@@ -86,4 +86,49 @@ html {
 
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Accent utilities */
+.accent-white {
+  accent-color: #ffffff;
+}
+
+/* Product image hover zoom helper */
+.product-img-wrap {
+  overflow: hidden;
+}
+.product-img {
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: center;
+}
+.group:hover .product-img {
+  transform: scale(1.04);
+}
+
+/* Range input tweaks for white accent */
+input[type="range"].accent-white::-webkit-slider-thumb {
+  background: #ffffff;
+}
+input[type="range"].accent-white::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(255,255,255,0.6));
+}
+input[type="range"].accent-white::-moz-range-thumb {
+  background: #ffffff;
+}
+
+/* Admin layout (light theme tweaks) */
+.admin-layout {
+  background-color: #f8fafc;
+  color: #0f1720;
+}
+.admin-layout .neon-text {
+  color: #0f1720;
+  text-shadow: none;
+}
+.admin-layout .glass-panel {
+  background: #ffffff;
+  border-color: rgba(15,23,36,0.06);
+}
+.admin-layout .animate-pulse-neon {
+  animation: none;
 }

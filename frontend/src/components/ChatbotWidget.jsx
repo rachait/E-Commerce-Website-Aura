@@ -66,12 +66,12 @@ export default function ChatbotWidget() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               transition={{ duration: 0.3 }}
-              className="glass-panel w-96 h-96 rounded-lg flex flex-col border border-cyan-neon/30 overflow-hidden mb-4"
+              className="glass-panel w-96 h-96 rounded-lg flex flex-col border border-text-secondary/20 overflow-hidden mb-4"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-cyan-neon/20 bg-dark-surface/50">
+              <div className="flex items-center justify-between p-4 border-b border-text-secondary/20 bg-dark-surface/50">
                 <div>
-                  <h3 className="font-heading font-bold text-cyan-neon">AURA Assistant</h3>
+                  <h3 className="font-heading font-bold text-white">AURA Assistant</h3>
                   <p className="text-xs text-text-secondary">Always here to help</p>
                 </div>
                 <button
@@ -93,40 +93,40 @@ export default function ChatbotWidget() {
                   >
                     <div
                       className={`max-w-xs px-4 py-2 rounded-lg ${
-                        msg.role === 'user'
-                          ? 'bg-cyan-neon/20 border border-cyan-neon/50 text-text-primary'
-                          : 'glass-panel border-text-secondary/20'
-                      }`}
+                          msg.role === 'user'
+                            ? 'bg-white/5 border border-text-secondary/20 text-text-primary'
+                            : 'glass-panel border-text-secondary/20'
+                        }`}
                     >
                       <p className="text-sm">{msg.content}</p>
                     </div>
                   </motion.div>
                 ))}
                 {loading && (
-                  <div className="flex gap-2 items-center">
-                    <div className="w-2 h-2 rounded-full bg-cyan-neon animate-bounce"></div>
-                    <div className="w-2 h-2 rounded-full bg-cyan-neon animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 rounded-full bg-cyan-neon animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="flex gap-2 items-center">
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce"></div>
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-cyan-neon/20">
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-text-secondary/20">
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask something..."
-                    className="flex-1 glass-panel p-2 rounded text-sm placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                    className="flex-1 glass-panel p-2 rounded text-sm placeholder-text-secondary focus:outline-none focus:border-white/30"
                     disabled={loading}
                   />
                   <button
                     type="submit"
                     disabled={loading || !input.trim()}
-                    className="p-2 glass-panel hover:border-cyan-neon rounded transition disabled:opacity-50"
+                    className="p-2 glass-panel hover:border-white/30 rounded transition disabled:opacity-50"
                   >
                     <Send size={16} />
                   </button>
@@ -141,12 +141,12 @@ export default function ChatbotWidget() {
           onClick={() => setIsOpen(!isOpen)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="glass-panel p-4 rounded-full hover:border-cyan-neon transition border border-text-secondary/30"
+          className="glass-panel p-4 rounded-full hover:border-white/30 transition border border-text-secondary/30"
         >
           {isOpen ? (
             <X size={24} className="text-text-primary" />
           ) : (
-            <MessageCircle size={24} className="text-cyan-neon" />
+            <MessageCircle size={24} className="text-white" />
           )}
         </motion.button>
       </div>

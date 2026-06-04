@@ -68,7 +68,7 @@ function Toast({ toast, onRemove }) {
         return <AlertCircle className="text-red-400" size={20} />
       case 'info':
       default:
-        return <Info className="text-cyan-neon" size={20} />
+        return <Info className="text-white" size={20} />
     }
   }
 
@@ -80,7 +80,7 @@ function Toast({ toast, onRemove }) {
         return 'border-red-500/50 bg-red-500/10'
       case 'info':
       default:
-        return 'border-cyan-neon/50 bg-cyan-neon/10'
+        return 'border-text-secondary/50 bg-white/5'
     }
   }
 

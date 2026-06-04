@@ -196,7 +196,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-4 bg-black text-white">
+    <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-4 bg-zinc-950 text-white">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -204,10 +204,10 @@ export default function Auth() {
         className="w-full max-w-md"
       >
         {/* Card */}
-        <div className="glass-panel p-8 md:p-12">
+        <div className="glass-panel p-8 md:p-12 bg-zinc-900">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="font-display text-3xl font-bold neon-text mb-2">AURA</h1>
+            <h1 className="font-display text-3xl font-light tracking-[0.2em] text-white mb-2">AURA</h1>
             <h2 className="font-heading text-xl text-text-secondary">
               {useOTP ? (
                 otpStep === 'otp' ? 'Verify Code' : 'Set Password'
@@ -257,7 +257,7 @@ export default function Auth() {
                           value={formData.name}
                           onChange={handleChange}
                           placeholder="Your full name"
-                          className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                            className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-white/70"
                         />
                       </div>
                     </div>
@@ -275,7 +275,7 @@ export default function Auth() {
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="you@example.com"
-                        className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                        className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-white/70"
                       />
                     </div>
                   </div>
@@ -283,7 +283,7 @@ export default function Auth() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full mt-6 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-cyan-neon hover:bg-cyan-neon/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                    className="w-full mt-6 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-white/30 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   >
                     {loading ? 'Sending...' : 'Send OTP'}
                   </button>
@@ -309,7 +309,7 @@ export default function Auth() {
                   <button
                     type="submit"
                     disabled={loading || otpCode.length !== 6}
-                    className="w-full mt-8 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-cyan-neon hover:bg-cyan-neon/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                    className="w-full mt-8 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-white/30 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   >
                     {loading ? 'Verifying...' : 'Verify & Continue'}
                   </button>
@@ -318,7 +318,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setOtpStep('email')}
-                    className="w-full mt-3 py-2 text-cyan-neon hover:underline text-sm font-body"
+                    className="w-full mt-3 py-2 text-white/70 hover:underline text-sm font-body"
                   >
                     Use Different Email
                   </button>
@@ -345,7 +345,7 @@ export default function Auth() {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="••••••••"
-                        className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                        className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-white/70"
                       />
                     </div>
                     <p className="text-xs text-text-secondary mt-2">
@@ -356,7 +356,7 @@ export default function Auth() {
                   <button
                     type="submit"
                     disabled={loading || !formData.password}
-                    className="w-full mt-6 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-cyan-neon hover:bg-cyan-neon/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                    className="w-full mt-6 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-white/30 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                   >
                     {loading ? 'Creating Account...' : 'Create Account'}
                   </button>
@@ -364,10 +364,10 @@ export default function Auth() {
               )}
 
               {/* Switch Auth Method */}
-              <div className="mt-8 pt-6 border-t border-cyan-neon/20">
+                  <div className="mt-8 pt-6 border-t border-text-secondary/20">
                 <button
                   onClick={resetForm}
-                  className="text-center text-text-secondary text-sm hover:text-cyan-neon"
+                  className="text-center text-text-secondary text-sm hover:text-white/70"
                 >
                   Back to {isLogin ? 'Sign In' : 'Sign Up'}
                 </button>
@@ -395,7 +395,7 @@ export default function Auth() {
                         value={formData.name}
                         onChange={handleChange}
                         placeholder="Your full name"
-                        className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                        className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-white/70"
                       />
                     </div>
                   </motion.div>
@@ -414,7 +414,7 @@ export default function Auth() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
+                      className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-white/70"
                     />
                   </div>
                 </div>
@@ -426,14 +426,14 @@ export default function Auth() {
                   </label>
                   <div className="relative">
                     <Lock size={18} className="absolute left-3 top-3 text-text-secondary" />
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-cyan-neon"
-                    />
+                      <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        className="w-full pl-10 pr-4 py-2 glass-panel rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-white/70"
+                      />
                   </div>
                 </div>
 
@@ -441,13 +441,13 @@ export default function Auth() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-6 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-cyan-neon hover:bg-cyan-neon/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  className="w-full mt-6 py-3 glass-button rounded-lg font-heading font-600 text-text-primary hover:border-white/30 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                 >
                   {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}
                 </button>
 
                 {/* OTP Option */}
-                <div className="mt-4 pt-4 border-t border-cyan-neon/20">
+                <div className="mt-4 pt-4 border-t border-text-secondary/20">
                   <button
                     type="button"
                     onClick={() => {
@@ -455,7 +455,7 @@ export default function Auth() {
                       setError('')
                       setFormData({ email: formData.email, password: '', name: formData.name })
                     }}
-                    className="w-full py-2 text-sm text-cyan-neon hover:underline font-body"
+                    className="w-full py-2 text-sm text-white/70 hover:underline font-body"
                   >
                     Use OTP Instead
                   </button>
@@ -463,7 +463,7 @@ export default function Auth() {
               </form>
 
               {/* Toggle Button */}
-              <div className="mt-8 pt-6 border-t border-cyan-neon/20">
+              <div className="mt-8 pt-6 border-t border-text-secondary/20">
                 <p className="text-center text-text-secondary text-sm">
                   {isLogin ? "Don't have an account? " : 'Already have an account? '}
                   <button
@@ -476,7 +476,7 @@ export default function Auth() {
                       setSuccessMessage('')
                       setFormData({ email: '', password: '', name: '' })
                     }}
-                    className="text-cyan-neon hover:underline font-semibold"
+                    className="text-white/70 hover:underline font-semibold"
                   >
                     {isLogin ? 'Sign Up' : 'Sign In'}
                   </button>
@@ -484,17 +484,17 @@ export default function Auth() {
               </div>
 
               {/* Demo Credentials */}
-              <div className="mt-8 p-4 bg-cyan-neon/5 border border-cyan-neon/30 rounded-lg">
-                <p className="font-heading font-semibold text-sm mb-2">Demo Credentials</p>
-                <div className="text-xs text-text-secondary space-y-1">
+              <details className="mt-8">
+                <summary className="font-heading font-semibold text-sm mb-2 cursor-pointer">Demo Credentials</summary>
+                <div className="mt-2 p-3 bg-white/3 rounded-sm border border-white/6 text-xs text-text-secondary space-y-1">
                   <p>
-                    <span className="text-cyan-neon">Admin:</span> admin@aura.com / admin123
+                    <span className="text-white/70">Admin:</span> admin@aura.com / admin123
                   </p>
                   <p>
-                    <span className="text-cyan-neon">User:</span> user@example.com / password123
+                    <span className="text-white/70">User:</span> user@example.com / password123
                   </p>
                 </div>
-              </div>
+              </details>
             </>
           )}
         </div>

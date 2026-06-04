@@ -48,16 +48,16 @@ export default function Cart() {
           <ShoppingCart size={72} className="mx-auto mb-6 text-text-secondary opacity-50" />
           <h1 className="font-heading text-4xl font-bold mb-4">Sign In to View Cart</h1>
           <p className="text-text-secondary text-lg mb-8">Add items to your cart and complete your purchase</p>
-          <div className="flex gap-4 justify-center">
+            <div className="flex gap-4 justify-center">
             <button 
               onClick={() => navigate('/auth')}
-              className="bg-cyan-neon text-black px-8 py-3 rounded-sm font-bold hover:bg-pink-neon transition"
+              className="bg-white text-black px-8 py-3 rounded-sm font-bold hover:bg-zinc-200 transition"
             >
               Sign In
             </button>
             <button 
               onClick={() => navigate('/products/featured')}
-              className="border border-cyan-neon px-8 py-3 rounded-sm font-bold hover:bg-cyan-neon/10 transition"
+              className="border border-text-secondary/20 px-8 py-3 rounded-sm font-bold hover:bg-white/5 transition"
             >
               Continue Shopping
             </button>
@@ -127,7 +127,7 @@ export default function Cart() {
   if (loading) {
     return (
       <div className="pt-24 pb-16 flex justify-center items-center min-h-screen">
-        <div className="animate-pulse-neon text-cyan-neon text-2xl">Loading cart...</div>
+        <div className="animate-pulse-neon text-white text-2xl">Loading cart...</div>
       </div>
     )
   }
@@ -141,7 +141,7 @@ export default function Cart() {
           <p className="text-text-secondary text-lg mb-8">Discover our latest collections and add items to your cart</p>
           <button 
             onClick={() => navigate('/products/featured')}
-            className="inline-block bg-cyan-neon text-black px-8 py-3 rounded-sm font-bold hover:bg-pink-neon transition w-fit mx-auto"
+            className="inline-block bg-white text-black px-8 py-3 rounded-sm font-bold hover:bg-zinc-200 transition w-fit mx-auto"
           >
             Start Shopping
           </button>
@@ -157,7 +157,7 @@ export default function Cart() {
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-text-secondary hover:text-cyan-neon transition mb-6"
+            className="flex items-center gap-2 text-text-secondary hover:text-white/70 transition mb-6"
           >
             <ArrowLeft size={20} /> Back
           </button>
@@ -180,7 +180,7 @@ export default function Cart() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="border border-text-secondary/20 rounded-sm p-6 hover:border-cyan-neon/30 transition flex gap-6"
+                    className="border border-text-secondary/20 rounded-sm p-6 hover:border-text-secondary/30 transition flex gap-6"
                   >
                     {/* Product Image */}
                     <div className="w-32 h-40 flex-shrink-0 rounded-sm overflow-hidden bg-dark-surface">
@@ -208,7 +208,7 @@ export default function Cart() {
                     <div className="flex-1">
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="font-heading font-bold text-lg hover:text-cyan-neon transition cursor-pointer">
+                          <h3 className="font-heading font-bold text-lg hover:text-white/70 transition cursor-pointer">
                             {product?.name || item.productId}
                           </h3>
                           <p className="text-text-secondary text-sm mt-1">{product?.description}</p>
@@ -231,7 +231,7 @@ export default function Cart() {
                           <button
                             onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
                             disabled={updatingItems.has(item.productId) || item.quantity <= 1}
-                            className="p-1 hover:text-cyan-neon disabled:opacity-50 transition"
+                            className="p-1 hover:text-white/70 disabled:opacity-50 transition"
                           >
                             <Minus size={18} />
                           </button>
@@ -239,7 +239,7 @@ export default function Cart() {
                           <button
                             onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
                             disabled={updatingItems.has(item.productId)}
-                            className="p-1 hover:text-cyan-neon disabled:opacity-50 transition"
+                            className="p-1 hover:text-white/70 disabled:opacity-50 transition"
                           >
                             <Plus size={18} />
                           </button>
@@ -250,7 +250,7 @@ export default function Cart() {
                         </div>
                         <div className="text-right">
                           <p className="text-text-secondary text-sm">Total</p>
-                          <p className="neon-text font-heading font-bold text-2xl">₹{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="font-heading font-bold text-2xl text-white">₹{(item.price * item.quantity).toFixed(2)}</p>
                         </div>
                       </div>
                     </div>
@@ -307,7 +307,7 @@ export default function Cart() {
                   />
                   <button
                     onClick={handleApplyCoupon}
-                    className="px-4 py-2 border border-cyan-neon rounded-sm text-sm hover:bg-cyan-neon/10"
+                    className="px-4 py-2 border border-text-secondary/20 rounded-sm text-sm hover:bg-white/5"
                   >
                     Apply
                   </button>
@@ -316,14 +316,14 @@ export default function Cart() {
 
               <button
                 onClick={handleProceedToCheckout}
-                className="w-full bg-cyan-neon text-black py-4 rounded-sm font-heading font-bold text-lg hover:bg-pink-neon transition-all duration-300 mb-4"
+                className="w-full bg-white text-black py-4 rounded-sm font-heading font-bold text-lg hover:bg-zinc-200 transition-all duration-300 mb-4"
               >
                 Proceed to Checkout
               </button>
 
               <button
                 onClick={() => navigate('/products/featured')}
-                className="w-full border border-text-secondary/30 py-3 rounded-sm font-body hover:border-cyan-neon hover:bg-cyan-neon/5 transition text-text-secondary hover:text-text-primary"
+                className="w-full border border-text-secondary/30 py-3 rounded-sm font-body hover:border-text-secondary/50 hover:bg-white/5 transition text-text-secondary hover:text-text-primary"
               >
                 Continue Shopping
               </button>

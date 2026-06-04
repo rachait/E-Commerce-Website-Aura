@@ -54,36 +54,112 @@ Frontend (React/Vite) -> API Proxy -> FastAPI -> MongoDB
 
 - Python 3.12+
 - Node.js 20+
-- MongoDB running locally
+- Docker Desktop (for MongoDB via Docker Compose)
+- MongoDB Atlas account (optional cloud alternative)
 
-### Install and Run (recommended)
+### Recommended local setup (Docker + Local Dev)
 
-From repo root:
+#### 1. Start MongoDB, Prometheus, and Grafana containers
+
+From the repository root:
 
 ```powershell
-npm install
-npm run dev
+docker compose -f deploy/docker-compose.yml up -d mongo prometheus grafana
 ```
 
 This starts:
+- **MongoDB**: http://localhost:27017
+- **Prometheus**: http://localhost:9090 (metrics)
+- **Grafana**: http://localhost:3000 (dashboards, default: admin/admin)
 
-- Backend on http://localhost:8000
-- Frontend on http://localhost:3000
-
-### Manual backend setup (first time)
+#### 2. Install backend dependencies and activate virtual environment
 
 ```powershell
 cd backend
 python -m venv .venv
-.\.venv\Scripts\activate
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+cd ..
 ```
 
-### Manual frontend setup
+#### 3. Seed the database with sample products and users
+
+```powershell
+$env:PYTHONPATH="backend"
+backend\.venv\Scripts\python.exe backend/seed_db.py
+```
+
+Output includes test credentials:
+- **Admin**: admin@aura.com / admin123
+- **User**: user@example.com / password123
+
+#### 4. Start the backend (in one terminal)
+
+```powershell
+$env:PYTHONPATH="backend"
+backend\.venv\Scripts\python.exe -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend runs on http://localhost:8000
+API docs: http://localhost:8000/docs
+
+#### 5. Start the frontend (in another terminal)
 
 ```powershell
 cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs on http://localhost:3002 (or next available port)
+
+### Access the app
+
+- **Frontend**: http://localhost:3002
+- **Backend API**: http://localhost:8000
+- **API Docs (Swagger)**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+- **Metrics (Prometheus)**: http://localhost:8000/metrics
+- **Grafana Dashboards**: http://localhost:3000
+
+### Test credentials
+
+```
+Admin Dashboard:
+  Email: admin@aura.com
+  Password: admin123
+
+Test User:
+  Email: user@example.com
+  Password: password123
+```
+
+### Build frontend for production
+
+```powershell
+cd frontend
+npm run build
+```
+
+Output goes to `frontend/dist/`
+
+### Stop all containers
+
+```powershell
+docker compose -f deploy/docker-compose.yml down
+```
+
+### Cloud MongoDB (Atlas) Alternative
+
+If you don't want to use Docker for MongoDB:
+
+1. Create a MongoDB Atlas cluster at https://www.mongodb.com/cloud/atlas
+2. Get your connection string (format: `mongodb+srv://user:password@cluster.mongodb.net/aura_ecommerce`)
+3. Set environment variable:
+   ```powershell
+   $env:MONGO_URL="your-atlas-connection-string"
+   ```
+4. Start backend (will use MONGO_URL instead of localhost)
 npm install
 npm run dev
 ```
@@ -102,8 +178,12 @@ Use FORCE_RESEED_PRODUCTS=true when you want to replace existing product data wi
 
 ### Backend tests
 
+From `backend/` after creating and activating the virtual environment:
+
 ```powershell
-PYTHONPATH=backend pytest backend/tests
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m pytest tests
 ```
 
 ### Frontend build

@@ -6,9 +6,10 @@ import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
 import ProductQuickAddModal from './ProductQuickAddModal'
 import { getProductImageCandidates } from '../utils/images'
+import { cloudinaryUrl } from '../utils/cloudinary'
 
 const PRODUCT_IMAGE_FALLBACK = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#18181b"/><text x="50%" y="50%" fill="#f4f4f5" font-size="32" text-anchor="middle" dominant-baseline="middle" font-family="Arial">AURA</text></svg>'
+  '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f1720"/><text x="50%" y="50%" fill="#f3f4f6" font-size="32" text-anchor="middle" dominant-baseline="middle" font-family="Arial">AURA</text></svg>'
 )}`
 
 function ProductCard({ product }) {
@@ -19,14 +20,23 @@ function ProductCard({ product }) {
     const candidates = getProductImageCandidates(product)
     return candidates.length > 0 ? candidates : [PRODUCT_IMAGE_FALLBACK]
   }, [product])
+  const transformedCandidates = useMemo(() => {
+    // apply Cloudinary transforms when possible for better performance and consistent crops
+    try {
+      return imageCandidates.map((c) => cloudinaryUrl(c))
+    } catch (e) {
+      return imageCandidates
+    }
+  }, [imageCandidates])
+
   const [imageIndex, setImageIndex] = useState(0)
-  const [imageSrc, setImageSrc] = useState(imageCandidates[0])
+  const [imageSrc, setImageSrc] = useState(transformedCandidates[0] || imageCandidates[0])
   const inWishlist = isInWishlist(product.id)
 
   useEffect(() => {
     setImageIndex(0)
-    setImageSrc(imageCandidates[0])
-  }, [imageCandidates])
+    setImageSrc(transformedCandidates[0] || imageCandidates[0])
+  }, [transformedCandidates, imageCandidates])
 
   const handleImageError = useCallback(() => {
     if (imageIndex < imageCandidates.length - 1) {
@@ -49,12 +59,12 @@ function ProductCard({ product }) {
       whileHover={{ y: -6 }}
       className="group"
     >
-      <div className="relative overflow-hidden rounded-sm mb-4 h-80 bg-zinc-100 border border-zinc-200">
+      <div className="relative product-img-wrap rounded-sm mb-4 h-80 bg-zinc-900 border border-white/5">
         <img 
           src={imageSrc}
           alt={product.name}
           onError={handleImageError}
-          className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+          className="product-img w-full h-full object-cover"
         />
         
         {/* Overlay Gradient */}
@@ -119,17 +129,16 @@ function ProductCard({ product }) {
 
       {/* Product Info */}
       <Link to={`/product/${product.id}`} className="block">
-        <p className="text-xs uppercase tracking-[0.12em] text-zinc-500 mb-2">
-          {product.category || 'New'}
+        <p className="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">
+          {product.subcategory || product.category || 'New'}
         </p>
-        <h3 className="font-bold text-base mb-2 line-clamp-2 hover:text-zinc-700 transition">
+        <h3 className="font-bold text-base mb-2 line-clamp-2 text-white hover:text-zinc-300 transition">
           {product.name}
         </h3>
-        <p className="text-zinc-600 text-xs mb-3 line-clamp-2">{product.description}</p>
 
         {/* Price Section */}
         <div className="flex items-baseline gap-2">
-          <span className="font-bold text-lg text-zinc-900">₹{product.price}</span>
+          <span className="font-bold text-lg text-white">₹{product.price}</span>
           {product.originalPrice && product.originalPrice > product.price && (
             <span className="text-xs text-zinc-500 line-through">₹{product.originalPrice}</span>
           )}

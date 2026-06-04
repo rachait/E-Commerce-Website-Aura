@@ -114,7 +114,7 @@ export default function ProductDetail() {
   if (loading) {
     return (
       <div className="pt-24 pb-16 flex justify-center items-center min-h-screen">
-        <div className="animate-pulse-neon text-cyan-neon text-xl">Loading...</div>
+        <div className="animate-pulse-neon text-white text-xl">Loading...</div>
       </div>
     )
   }
@@ -153,7 +153,7 @@ export default function ProductDetail() {
       <div className="max-w-7xl mx-auto px-4">
         <button 
           onClick={() => navigate(-1)}
-          className="text-text-secondary hover:text-cyan-neon mb-6 transition"
+          className="text-text-secondary hover:text-white/70 mb-6 transition"
         >
           ← Back
         </button>
@@ -183,7 +183,7 @@ export default function ProductDetail() {
                     key={idx}
                     onClick={() => setMainImageIndex(idx)}
                     className={`w-20 h-20 rounded-sm cursor-pointer transition bg-dark-surface flex-shrink-0 ${
-                      mainImageIndex === idx ? 'border-2 border-cyan-neon' : 'hover:border-2 hover:border-cyan-neon'
+                      mainImageIndex === idx ? 'border-2 border-white' : 'hover:border-2 hover:border-white'
                     }`}
                   >
                     <img
@@ -211,26 +211,26 @@ export default function ProductDetail() {
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-cyan-neon text-sm font-heading font-bold uppercase mb-2">
+                  <p className="text-white text-sm font-heading font-bold uppercase mb-2">
                     {product.category}
                   </p>
                   <h1 className="font-heading text-4xl font-bold mb-4">{product.name}</h1>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-3 glass-panel hover:border-cyan-neon transition rounded-lg">
+                  <button className="p-3 glass-panel hover:border-white/30 transition rounded-lg">
                     <Heart size={20} />
                   </button>
-                  <button className="p-3 glass-panel hover:border-cyan-neon transition rounded-lg">
+                  <button className="p-3 glass-panel hover:border-white/30 transition rounded-lg">
                     <Share2 size={20} />
                   </button>
                 </div>
               </div>
 
               {/* Rating & Price */}
-              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-cyan-neon/20">
+              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-text-secondary/20">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} className="text-cyan-neon fill-current" />
+                    <Star key={i} size={16} className="text-white fill-current" />
                   ))}
                 </div>
                 <span className="text-text-secondary text-sm">({reviews.length || product.ratingCount || 0} reviews)</span>
@@ -239,7 +239,7 @@ export default function ProductDetail() {
               {/* Price */}
               <div className="mb-6">
                 <div className="flex items-baseline gap-4">
-                  <span className="neon-text font-display text-4xl font-bold">₹{product.price}</span>
+                  <span className="font-display text-4xl font-bold text-white">₹{product.price}</span>
                   <span className="text-text-secondary line-through">₹{(product.price * 1.2).toFixed(0)}</span>
                   <span className="text-green-400 text-sm">20% OFF</span>
                 </div>
@@ -260,7 +260,7 @@ export default function ProductDetail() {
 
             {/* Size Selection */}
             {product.sizes && product.sizes.length > 0 && (
-              <div className="mb-6">
+                <div className="mb-6">
                 <label className="block text-sm font-heading font-bold mb-3">Select Size</label>
                 <div className="flex gap-3 flex-wrap">
                   {product.sizes.map(size => (
@@ -269,8 +269,8 @@ export default function ProductDetail() {
                       onClick={() => setSelectedSize(size)}
                       className={`px-4 py-2 rounded-lg border transition ${
                         selectedSize === size
-                          ? 'glass-panel border-cyan-neon bg-cyan-neon/10'
-                          : 'border-text-secondary/30 hover:border-cyan-neon'
+                          ? 'glass-panel border-white bg-white/5'
+                          : 'border-text-secondary/30 hover:border-white'
                       }`}
                     >
                       {size}
@@ -286,14 +286,14 @@ export default function ProductDetail() {
               <div className="glass-panel flex items-center justify-between px-4 py-3 rounded-lg w-32">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="hover:text-cyan-neon transition"
+                  className="hover:text-white/70 transition"
                 >
                   <Minus size={18} />
                 </button>
                 <span className="font-bold w-8 text-center">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="hover:text-cyan-neon transition"
+                  className="hover:text-white/70 transition"
                 >
                   <Plus size={18} />
                 </button>
@@ -323,31 +323,31 @@ export default function ProductDetail() {
             )}
 
             {/* Additional Info */}
-            <div className="mt-8 pt-8 border-t border-cyan-neon/20 space-y-3 text-sm">
+            <div className="mt-8 pt-8 border-t border-text-secondary/20 space-y-3 text-sm">
               <div className="flex justify-between text-text-secondary">
                 <span>Free Shipping</span>
-                <span className="text-cyan-neon">On orders over ₹1000</span>
+                <span className="text-white/70">On orders over ₹1000</span>
               </div>
               <div className="flex justify-between text-text-secondary">
                 <span>30-Day Returns</span>
-                <span className="text-cyan-neon">No questions asked</span>
+                <span className="text-white/70">No questions asked</span>
               </div>
               <div className="flex justify-between text-text-secondary">
                 <span>Secure Checkout</span>
-                <span className="text-cyan-neon">Razorpay encrypted</span>
+                <span className="text-white/70">Razorpay encrypted</span>
               </div>
             </div>
           </motion.div>
         </div>
 
         {/* Reviews */}
-        <div className="mt-20 pt-12 border-t border-cyan-neon/20">
+        <div className="mt-20 pt-12 border-t border-text-secondary/20">
           <h2 className="font-heading text-3xl font-bold mb-8">Reviews</h2>
 
           <div className="glass-panel p-5 rounded-lg mb-8">
             <p className="text-sm text-text-secondary mb-3">Share your experience</p>
             <div className="flex items-center gap-2 mb-3">
-              {[1, 2, 3, 4, 5].map((value) => (
+                  {[1, 2, 3, 4, 5].map((value) => (
                 <button
                   key={value}
                   onClick={() => setReviewRating(value)}
@@ -355,7 +355,7 @@ export default function ProductDetail() {
                 >
                   <Star
                     size={18}
-                    className={value <= reviewRating ? 'text-cyan-neon fill-current' : 'text-zinc-500'}
+                    className={value <= reviewRating ? 'text-white fill-current' : 'text-zinc-500'}
                   />
                 </button>
               ))}
@@ -370,7 +370,7 @@ export default function ProductDetail() {
             <button
               onClick={handleSubmitReview}
               disabled={submittingReview}
-              className="mt-3 px-5 py-2 bg-cyan-neon text-black rounded-sm font-bold disabled:opacity-60"
+              className="mt-3 px-5 py-2 bg-white text-black rounded-sm font-bold disabled:opacity-60"
             >
               {submittingReview ? 'Submitting...' : 'Submit Review'}
             </button>
@@ -388,8 +388,8 @@ export default function ProductDetail() {
                   </div>
                   <div className="flex items-center gap-1 mb-2">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={14} className={i < entry.rating ? 'text-cyan-neon fill-current' : 'text-zinc-600'} />
-                    ))}
+                        <Star key={i} size={14} className={i < entry.rating ? 'text-white fill-current' : 'text-zinc-600'} />
+                      ))}
                   </div>
                   <p className="text-sm text-text-secondary">{entry.comment}</p>
                 </div>
@@ -399,7 +399,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Related Products Section */}
-        <div className="mt-20 pt-12 border-t border-cyan-neon/20">
+        <div className="mt-20 pt-12 border-t border-text-secondary/20">
           <h2 className="font-heading text-3xl font-bold mb-8">You Might Also Like</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Placeholder for related products */}

@@ -60,7 +60,7 @@ export default function OTPInput({
             onKeyDown={(e) => handleKeyDown(e, index)}
             onPaste={handlePaste}
             placeholder="•"
-            className="w-12 h-14 bg-black text-white text-center text-xl font-mono border-2 border-gray-600 rounded-lg placeholder-gray-500 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all"
+            className="w-12 h-14 bg-zinc-900 text-white text-center text-xl font-mono border-2 border-gray-600 rounded-lg placeholder-gray-500 focus:border-white/70 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
           />
         ))}
       </div>
@@ -70,7 +70,7 @@ export default function OTPInput({
         <button
           onClick={onResend}
           disabled={isResending || timeUntilResend > 0}
-          className="flex items-center gap-2 text-cyan-500 hover:text-cyan-600 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 text-white/70 hover:text-white disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           <RotateCcw size={16} />
           {timeUntilResend > 0 ? (

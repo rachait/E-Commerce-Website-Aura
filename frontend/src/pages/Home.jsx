@@ -382,7 +382,7 @@ export default function Home() {
         const toProductCardShape = (product) => ({
           ...product,
           images: product.images || (product.image ? [product.image] : []),
-          description: product.description || 'Curated for your style preferences.',
+          description: product.description || '',
           stock: product.stock ?? 10,
           sizes: product.sizes || ['S', 'M', 'L']
         })
